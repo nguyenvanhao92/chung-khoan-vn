@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: vn-stock-analyzer
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/ping
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
+      - key: FIREANT_TOKEN
+        sync: false

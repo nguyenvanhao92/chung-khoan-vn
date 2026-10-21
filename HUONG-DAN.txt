@@ -1,0 +1,31 @@
+HUONG DAN CHAY VN STOCK ANALYZER (GIA THAT TU CAFEF, TU CAP NHAT)
+==================================================================
+1) Cai Python 3.8+ (https://www.python.org/downloads - nho tick "Add Python to PATH").
+2) Giai nen thu muc VN-Stock-Analyzer.
+3) Bam dup start-windows.bat (Mac/Linux: start-mac-linux.sh). Trinh duyet tu mo http://localhost:8000
+   KHONG CAN TOKEN: gia lay truc tiep tu bang gia CafeF (banggia.cafef.vn) - gia tham chieu, gia khop,
+   cao/thap, khoi luong cua toan bo ma HOSE (va HNX). Cap nhat ~6 giay/lan trong gio giao dich.
+4) Trong cua so lenh co dong kiem tra tung nguon, vi du:
+      - CafeF (bang gia)  OK
+   Tren trang: dau trang "du lieu that · CafeF · gio cap nhat"; cuoi muc Bubble VN30 ghi "Nguon % hien tai: CafeF".
+5) Lich su gia (bieu do nen 120 phien) lay tu DNSE/Entrade hoac VNDIRECT. Neu ca hai khong truy cap duoc,
+   trang van hien GIA/%/CAO-THAP/KHOI LUONG THAT tu CafeF nhung duong lich su ve mo phong
+   (dau trang ghi "lich su gia mo phong").
+6) (Tuy chon) FireAnt: tao file fireant_token.txt (cung thu muc server.py), dan Bearer token vao
+   -> lich su gia se lay tu FireAnt truoc.
+   Lay token: dang nhap fireant.vn -> F12 -> tab Network -> bam mot request toi restapi.fireant.vn
+   -> Request Headers -> dong "Authorization: Bearer ..." -> copy phan sau chu Bearer.
+
+NEU VAN HIEN "MO PHONG" HOAC BONG BONG XAM:
+   - Mo http://localhost:8000/api/status, sao chep noi dung (hoac cac dong LOI trong cua so lenh) de gui lai ho tro.
+   - Phai mo trang qua http://localhost:8000 (do start-windows.bat mo), khong mo file .html truc tiep.
+Luu y: quy dau tu, lich co tuc, dong tien nganh chinh thuc chua co nguon cong khai (cac muc do la du lieu mau/uoc tinh).
+
+--- BẢN CẬP NHẬT: NHIỀU NGUỒN HƠN + CHỌN CỔ PHIẾU 3 GIAI ĐOẠN ---
+- Máy chủ nay dùng thêm: lịch sử giá 420 phiên (VNDIRECT/Entrade/FireAnt/CafeF theo thứ tự dự phòng),
+  chỉ số VN-Index (Entrade), chỉ số tài chính P/E, P/B, ROE (VNDIRECT).
+- Endpoint mới: /api/scan (lịch sử + chỉ số tài chính cả danh sách mã), /api/ratios?symbol=FPT.
+- Mục "Cổ phiếu tối ưu theo 3 giai đoạn" (ngắn 1-4 tuần, trung 1-3 tháng, dài 6-12 tháng) tự chấm điểm
+  lại mỗi 20 giây khi chạy cùng máy chủ. Lần đầu mất khoảng 1 phút để nạp đủ lịch sử các mã.
+- Bản web không có máy chủ: mục này dùng dữ liệu MÔ PHỎNG (có cảnh báo trên màn hình).
+- Điểm/"tỷ lệ thắng" là mô hình tham khảo, không phải thống kê đã kiểm chứng hay lời khuyên đầu tư.

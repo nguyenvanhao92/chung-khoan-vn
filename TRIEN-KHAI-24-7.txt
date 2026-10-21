@@ -1,0 +1,31 @@
+DUA VN STOCK ANALYZER LEN MAY CHU 24/7 (MO TU DIEN THOAI / MAY NAO CUNG CO GIA THAT)
+====================================================================================
+Server tu doc bang gia CafeF lien tuc; ban chi can mo duong dan + nhap mat khau.
+
+CACH A - VPS (khuyen nghi: VPS dat tai Viet Nam, Ubuntu, ~100-200k/thang)
+  1) Copy thu muc nay len VPS (vd: scp -r VN-Stock-Analyzer user@IP:~).
+  2) Cai Docker:  curl -fsSL https://get.docker.com | sh
+  3) Chay:
+       cd ~/VN-Stock-Analyzer
+       docker build -t vnstock .
+       docker run -d --restart=always -p 80:8000 -e APP_PASSWORD="mat-khau-cua-ban" --name vnstock vnstock
+  4) Mo http://IP-CUA-VPS  -> nhap ten bat ky + mat khau.
+  (Khong dung Docker: HOST=0.0.0.0 PORT=80 NO_BROWSER=1 APP_PASSWORD=... python3 server.py)
+  Xem nhat ky / ket qua kiem tra nguon:  docker logs vnstock
+
+CACH B - Render.com (khong can quan ly may chu)
+  1) Dua thu muc nay len mot kho GitHub rieng tu.
+  2) Render -> New -> Blueprint -> chon kho do (Render doc file render.yaml).
+  3) Nhap APP_PASSWORD (va FIREANT_TOKEN neu co). Goi "starter" chay lien tuc;
+     goi mien phi se "ngu" sau 15 phut khong dung, mo lai mat ~1 phut.
+  4) Mo duong dan Render cap (dang https://vn-stock-analyzer-xxxx.onrender.com).
+
+KIEM TRA SAU KHI CHAY
+  - Nhat ky phai co dong:  CafeF (bang gia)  OK
+  - Mo /api/status de xem tung nguon.
+  - Neu CafeF bao LOI tren may chu nuoc ngoai (vd Render dat o My/Singapore): CafeF co the chan IP nuoc ngoai
+    -> dung VPS tai Viet Nam (Cach A).
+
+LUU Y
+  - Luon dat APP_PASSWORD khi dua len mang.
+  - Bang gia CafeF khong phai API chinh thuc; dung lau dai/cong khai nen dang ky nguon chinh thuc (SSI FastConnect, DNSE).
