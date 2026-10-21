@@ -207,6 +207,30 @@ def intraday_entrade(sym):
     return bars
 
 
+def bars_multi(sym, days):
+    """Nen phut gop (1 ngay -> 5 phut, 3 ngay -> 15 phut) tu nen 1 phut DNSE/Entrade (da kiem tra do phan giai '1')."""
+    size = 5 if days <= 1 else 15
+    now = int(time.time())
+    q = urllib.parse.urlencode({"from": now - 6 * 86400, "to": now + 600, "symbol": sym, "resolution": "1"})
+    raw = parse_entrade(fetch_json(ENTRADE + "?" + q))
+    if not raw:
+        raise RuntimeError("khong co nen phut")
+    def day(t):
+        return datetime.fromtimestamp(t, VN).date()
+    keep = sorted({day(b["t"]) for b in raw})[-days:]
+    out = {}
+    for b in raw:
+        if day(b["t"]) not in keep:
+            continue
+        k = b["t"] - b["t"] % (size * 60)
+        a = out.get(k)
+        if not a:
+            out[k] = {"t": k, "o": b["o"], "h": b["h"], "l": b["l"], "c": b["c"], "v": b["v"]}
+        else:
+            a["h"] = max(a["h"], b["h"]); a["l"] = min(a["l"], b["l"]); a["c"] = b["c"]; a["v"] += b["v"]
+    return [out[k] for k in sorted(out)], "DNSE/Entrade %d phut" % size
+
+
 def ratios(sym):
     q = urllib.parse.urlencode({"filter": "ratioCode:PRICE_TO_EARNINGS,PRICE_TO_BOOK,ROAE_TR_AVG5Q,ROAA_TR_AVG5Q,EPS_TR",
                                 "where": "code:" + sym, "order": "reportDate", "fields": "ratioCode,value,reportDate"}, safe=":,")
@@ -349,6 +373,12 @@ class H(BaseHTTPRequestHandler):
                     return send(self, 400, {"ok": False, "error": "ma khong hop le"})
                 c, src = cached("h" + sym, 60, lambda: history(sym, 420))
                 return send(self, 200, {"ok": True, "source": src, "symbol": sym, "candles": c})
+            if u.path == "/api/bars":
+                if not sym.isalnum() or len(sym) > 5:
+                    return send(self, 400, {"ok": False, "error": "ma khong hop le"})
+                nd = 1 if (qs.get("days", ["1"])[0] == "1") else 3
+                b, src = cached("b%s%d" % (sym, nd), 20, lambda: bars_multi(sym, nd))
+                return send(self, 200, {"ok": True, "source": src, "symbol": sym, "days": nd, "bars": b})
             if u.path == "/api/intraday":
                 if not sym.isalnum() or len(sym) > 5:
                     return send(self, 400, {"ok": False, "error": "ma khong hop le"})

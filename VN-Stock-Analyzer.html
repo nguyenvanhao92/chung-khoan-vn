@@ -85,7 +85,8 @@ html[data-view="phone"] .note{display:none!important}
 html[data-view="phone"] .card{padding:12px}html[data-view="phone"] .tb table{font-size:12.5px}html[data-view="phone"] .tb th,html[data-view="phone"] .tb td{padding:6px 5px}html[data-view="phone"] .lead{font-size:13.5px}
 @media(max-width:600px){html:not([data-view="desktop"]) .note{display:none!important}html:not([data-view="desktop"]) .card{padding:12px}html:not([data-view="desktop"]) .tb table{font-size:12.5px}html:not([data-view="desktop"]) .tb th,html:not([data-view="desktop"]) .tb td{padding:6px 5px}html:not([data-view="desktop"]) .lead{font-size:13.5px}}
 html[data-view="phone"] #mode{display:none}@media(max-width:600px){html:not([data-view="desktop"]) #mode{display:none}}
-html[data-view="phone"] main>section:nth-child(2),html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:600px){html:not([data-view="desktop"]) main>section:nth-child(2),html:not([data-view="desktop"]) main>section:nth-child(3){display:none}}
+html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:600px){html:not([data-view="desktop"]) main>section:nth-child(3){display:none}}
+.rng,.ovl{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.rng button{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer}.rng button.on{background:var(--acc);border-color:var(--acc);color:#fff}.ovl button{padding:4px 9px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer}.ovl button.on{background:var(--bg);border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}.cvinfo{font-size:12px;color:var(--mut);min-height:18px;margin:2px 0}.cvcap{font-size:11.5px;color:var(--mut);margin-top:4px}#cv{touch-action:pan-y}.th{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 6px;font-size:14px}.th small{color:var(--mut)}.lv{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;margin-top:6px;font-size:12px;color:var(--mut)}.lv div{background:var(--bg);border-radius:8px;padding:5px 8px}.lv b{display:block;color:var(--ink);font-size:13px}.tnote{font-size:11.5px;color:var(--mut);margin-top:8px}.sg-b{color:var(--up);font-weight:700}.sg-s{color:var(--dn);font-weight:700}.sg-n{color:var(--warn);font-weight:700}.sub{font-size:13px;font-weight:700;margin:12px 0 2px}
 </style>
 </head>
 <body>
@@ -103,13 +104,18 @@ html[data-view="phone"] main>section:nth-child(2),html[data-view="phone"] main>s
 <div class="quote"><b id="px">--</b><span id="chg">--</span><span class="name" id="nm"></span></div>
 </section>
 
-<section class="card c8">
+<section class="card c8" id="chartsec">
 <h2>Biểu Đồ Giá</h2>
+<div class="rng" id="rng"><button data-r="d1">1 ngày</button><button data-r="d3">3 ngày</button><button data-r="w1">1 tuần</button><button data-r="m1">1 tháng</button><button data-r="y1">1 năm</button><button data-r="all">Tất cả</button></div>
+<div class="ovl" id="ovl"><button data-o="sma20" style="color:#d99a00">SMA20</button><button data-o="sma50" style="color:#0ea5e9">SMA50</button><button data-o="bb" style="color:#8b5cf6">Bollinger</button><button data-o="fib">Fibonacci</button><button data-o="sr">Hỗ trợ/Kháng cự</button><button data-o="rsi">RSI</button><button data-o="macd">MACD</button><button data-o="stoch">Stoch</button></div>
+<div class="cvinfo" id="cvinfo"></div>
 <canvas id="cv"></canvas>
+<div class="cvcap" id="cvcap"></div>
 <div class="stats">
 <div>Mở cửa<b id="sO">-</b></div><div>Cao nhất<b id="sH">-</b></div><div>Thấp nhất<b id="sL">-</b></div><div>Tham chiếu<b id="sR" class="ref">-</b></div>
 </div>
-<div class="note">Nến ngày (120 phiên) · đường vàng: SMA20 · đường xanh: SMA50 · Đơn vị: nghìn đồng</div>
+<div id="tech"></div>
+<div class="note">Đơn vị: nghìn đồng. Bấm nút khung thời gian để đổi (1 ngày = nến 5 phút, 3 ngày = nến 15 phút, còn lại là nến ngày). Chỉ báo tính theo công thức chuẩn trên toàn bộ lịch sử có sẵn: RSI/ADX kiểu Wilder, MACD 12-26-9, Bollinger 20-2, Stochastic 14-3-3. Rê/chạm vào biểu đồ để xem chi tiết từng nến.</div>
 </section>
 
 <section class="card c4">
@@ -197,7 +203,7 @@ function gen(sym){
 }
 const sma=(a,n,i)=>{if(i<n-1)return null;let s=0;for(let j=i-n+1;j<=i;j++)s+=a[j].c;return s/n};
 function ema(a,n){const k=2/(n+1);let e=a[0].c;return a.map(x=>e=x.c*k+e*(1-k))}
-function rsi(a,n=14){let g=0,l=0;for(let i=a.length-n;i<a.length;i++){const d=a[i].c-a[i-1].c;d>0?g+=d:l-=d}return l===0?100:100-100/(1+g/l)}
+function rsi(a,n=14){const r=rsiS(a.map(x=>x.c),n),v=r[r.length-1];return v==null?50:v}
 function atr(a,n=14){let s=0;for(let i=a.length-n;i<a.length;i++)s+=Math.max(a[i].h-a[i].l,Math.abs(a[i].h-a[i-1].c),Math.abs(a[i].l-a[i-1].c));return s/n}
 
 function session(){const d=new Date(Date.now()+7*36e5),w=d.getUTCDay(),m=d.getUTCHours()*60+d.getUTCMinutes();
@@ -264,27 +270,122 @@ function render(){
   $("chg").textContent=noRef?"% chưa có (chưa đối chiếu giá tham chiếu)":(ch>=0?"▲ +":"▼ ")+f(ch)+" ("+(pc>=0?"+":"")+f(pc)+"%)";$("chg").className=noRef?"ref":cls;
   $("sO").textContent=REAL&&!NOOPEN?f(x.o):"—";$("sH").textContent=noHL?"—":f(x.h);$("sL").textContent=noHL?"—":f(x.l);$("sR").textContent=noRef?"—":f(ref);
   $("clock").textContent=new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});
-  chart();tape();analyze();
+  chart();tape();analyze();techRender();
 }
+
+/* ===== Thư viện chỉ báo kỹ thuật (công thức chuẩn) ===== */
+const nz=v=>v!=null&&isFinite(v);
+function smaV(v,n){const o=Array(v.length).fill(null);let s=0,k=0;for(let i=0;i<v.length;i++){if(!nz(v[i])){s=0;k=0;continue}s+=v[i];k++;if(k>n)s-=v[i-n];if(k>=n)o[i]=s/n}return o}
+function emaV(v,n){const o=Array(v.length).fill(null),q=2/(n+1);let st=-1;for(let i=0;i<v.length;i++){if(!nz(v[i]))continue;if(st<0)st=i;if(i-st===n-1){let s=0;for(let j=st;j<=i;j++)s+=v[j];o[i]=s/n}else if(i-st>=n)o[i]=v[i]*q+o[i-1]*(1-q)}return o}
+function rsiS(c,n=14){const o=Array(c.length).fill(null);if(c.length<=n)return o;let g=0,l=0;for(let i=1;i<=n;i++){const d=c[i]-c[i-1];d>0?g+=d:l-=d}g/=n;l/=n;o[n]=l===0?100:100-100/(1+g/l);for(let i=n+1;i<c.length;i++){const d=c[i]-c[i-1];g=(g*(n-1)+(d>0?d:0))/n;l=(l*(n-1)+(d<0?-d:0))/n;o[i]=l===0?100:100-100/(1+g/l)}return o}
+function macdS(c){const e12=emaV(c,12),e26=emaV(c,26),m=c.map((_,i)=>nz(e12[i])&&nz(e26[i])?e12[i]-e26[i]:null),sg=emaV(m,9);return{m,sg,h:m.map((v,i)=>nz(v)&&nz(sg[i])?v-sg[i]:null)}}
+function bbS(c,n=20,k=2){const mid=smaV(c,n),up=[],lo=[];for(let i=0;i<c.length;i++){if(mid[i]==null){up.push(null);lo.push(null);continue}let s=0;for(let j=i-n+1;j<=i;j++)s+=(c[j]-mid[i])*(c[j]-mid[i]);const sd=Math.sqrt(s/n);up.push(mid[i]+k*sd);lo.push(mid[i]-k*sd)}return{mid,up,lo}}
+function stochS(h,l,c,n=14){const raw=c.map((_,i)=>{if(i<n-1)return null;let hh=-1e18,ll=1e18;for(let j=i-n+1;j<=i;j++){hh=Math.max(hh,h[j]);ll=Math.min(ll,l[j])}return hh===ll?50:(c[i]-ll)/(hh-ll)*100}),k=smaV(raw,3);return{k,d:smaV(k,3)}}
+function adxS(h,l,c,n=14){const L=c.length,adx=Array(L).fill(null),pdi=Array(L).fill(null),mdi=Array(L).fill(null);if(L<2*n+1)return{adx,pdi,mdi};
+const tr=[0],pd=[0],md=[0];for(let i=1;i<L;i++){const up=h[i]-h[i-1],dn=l[i-1]-l[i];pd.push(up>dn&&up>0?up:0);md.push(dn>up&&dn>0?dn:0);tr.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])))}
+let a=0,b=0,d=0;for(let i=1;i<=n;i++){a+=tr[i];b+=pd[i];d+=md[i]}const dx=[];
+for(let i=n;i<L;i++){if(i>n){a=a-a/n+tr[i];b=b-b/n+pd[i];d=d-d/n+md[i]}const p=100*b/a,m=100*d/a;pdi[i]=p;mdi[i]=m;dx[i]=p+m?100*Math.abs(p-m)/(p+m):0}
+let ad=0;for(let i=n;i<2*n;i++)ad+=dx[i];ad/=n;adx[2*n-1]=ad;for(let i=2*n;i<L;i++){ad=(ad*(n-1)+dx[i])/n;adx[i]=ad}return{adx,pdi,mdi}}
+function cciS(h,l,c,n=20){const tp=c.map((x,i)=>(h[i]+l[i]+x)/3),m=smaV(tp,n);return tp.map((x,i)=>{if(m[i]==null)return null;let s=0;for(let j=i-n+1;j<=i;j++)s+=Math.abs(tp[j]-m[i]);const md=s/n;return md?(x-m[i])/(.015*md):0})}
+function wprS(h,l,c,n=14){return c.map((x,i)=>{if(i<n-1)return null;let hh=-1e18,ll=1e18;for(let j=i-n+1;j<=i;j++){hh=Math.max(hh,h[j]);ll=Math.min(ll,l[j])}return hh===ll?-50:(hh-x)/(hh-ll)*-100})}
+function obvS(c,v){let o=0;return c.map((x,i)=>{if(i>0)o+=x>c[i-1]?v[i]:x<c[i-1]?-v[i]:0;return o})}
+function mfiS(h,l,c,v,n=14){const tp=c.map((x,i)=>(h[i]+l[i]+x)/3);return tp.map((x,i)=>{if(i<n)return null;let p=0,q=0;for(let j=i-n+1;j<=i;j++){const mf=tp[j]*v[j];tp[j]>tp[j-1]?p+=mf:tp[j]<tp[j-1]?q+=mf:0}return q===0?100:100-100/(1+p/q)})}
+const INDC={};
+function calcInd(d){const L=d.length,la=d[L-1],key=S+"|"+L+"|"+la.c+"|"+la.v+"|"+la.h+"|"+la.l+"|"+(la.t||"");if(INDC[key])return INDC[key];
+const c=d.map(x=>x.c),h=d.map(x=>x.h),l=d.map(x=>x.l),v=d.map(x=>x.v),o={c,h,l,v,s10:smaV(c,10),s20:smaV(c,20),s50:smaV(c,50),s100:smaV(c,100),s200:smaV(c,200),e12:emaV(c,12),e26:emaV(c,26),bb:bbS(c),rsi:rsiS(c),macd:macdS(c),st:stochS(h,l,c),adx:adxS(h,l,c),cci:cciS(h,l,c),wpr:wprS(h,l,c),obv:obvS(c,v),mfi:mfiS(h,l,c,v)};o.obvm=smaV(o.obv,20);
+Object.keys(INDC).slice(0,-5).forEach(k=>delete INDC[k]);INDC[key]=o;return o}
+const lastV=a=>{for(let i=a.length-1;i>=0;i--)if(nz(a[i]))return a[i];return null};
+function techRows(d){const n=d.length,I=calcInd(d),px=d[n-1].c,R=[],ma=(nm,a)=>{const v=a[n-1];R.push([nm,v==null?"—":f(v),v==null?null:px>v?1:-1])};
+ma("SMA20",I.s20);ma("SMA50",I.s50);ma("SMA100",I.s100);ma("SMA200",I.s200);ma("EMA12",I.e12);ma("EMA26",I.e26);
+if(I.s20[n-1]!=null&&I.s50[n-1]!=null)R.push(["SMA20 / SMA50",I.s20[n-1]>I.s50[n-1]?"Giao cắt vàng (20>50)":"Giao cắt tử (20<50)",I.s20[n-1]>I.s50[n-1]?1:-1]);
+const r=I.rsi[n-1];if(r!=null)R.push(["RSI (14)",f(r,1),r<30?1:r>70?-1:0]);
+const k=I.st.k[n-1],dd=I.st.d[n-1];if(k!=null&&dd!=null)R.push(["Stochastic (14,3,3)","%K "+f(k,1)+" / %D "+f(dd,1),k<20&&k>dd?1:k>80&&k<dd?-1:0]);
+const m=I.macd.m[n-1],sg=I.macd.sg[n-1],hh=I.macd.h[n-1];if(hh!=null)R.push(["MACD (12,26,9)","hist "+f(hh,3),m>sg&&hh>0?1:-1]);
+const ax=I.adx.adx[n-1];if(ax!=null){const p=I.adx.pdi[n-1],q=I.adx.mdi[n-1];R.push(["ADX (14)",f(ax,1)+" · +DI "+f(p,0)+" / −DI "+f(q,0),ax>=25?(p>q?1:-1):0])}
+const cc=I.cci[n-1];if(cc!=null)R.push(["CCI (20)",f(cc,0),cc<-100?1:cc>100?-1:0]);
+const wp=I.wpr[n-1];if(wp!=null)R.push(["Williams %R (14)",f(wp,0),wp<-80?1:wp>-20?-1:0]);
+const bu=I.bb.up[n-1],bl=I.bb.lo[n-1];if(bu!=null){const pb=(px-bl)/(bu-bl);R.push(["Bollinger (20,2)","%B "+f(pb*100,0)+"%",px<bl?1:px>bu?-1:0])}
+const mf=I.mfi[n-1];if(mf!=null)R.push(["MFI (14)",f(mf,0),mf<20?1:mf>80?-1:0]);
+if(I.obvm[n-1]!=null)R.push(["OBV (dòng tiền khối lượng)",I.obv[n-1]>I.obvm[n-1]?"Trên TB 20 phiên":"Dưới TB 20 phiên",I.obv[n-1]>I.obvm[n-1]?1:-1]);
+return R}
+function patterns(d){const n=d.length,o=[];if(n<8||NOOPEN&&d===C)return o;const g=i=>({o:d[i].o,h:d[i].h,l:d[i].l,c:d[i].c,b:Math.abs(d[i].c-d[i].o),r:d[i].h-d[i].l,u:d[i].h-Math.max(d[i].o,d[i].c),w:Math.min(d[i].o,d[i].c)-d[i].l}),A=g(n-1),B=g(n-2),Cc=g(n-3),dn=d[n-1].c<d[n-6].c,upT=d[n-1].c>d[n-6].c;
+if(A.r>0&&A.b<=.1*A.r)o.push(["Doji (lưỡng lự)",0]);
+if(A.r>0&&A.b>0&&A.w>=2*A.b&&A.u<=.35*A.b)o.push(dn?["Búa (Hammer) – khả năng đảo chiều tăng",1]:["Người treo cổ (Hanging man) – cảnh báo giảm",upT?-1:0]);
+if(A.r>0&&A.b>0&&A.u>=2*A.b&&A.w<=.35*A.b&&upT)o.push(["Sao băng (Shooting star) – cảnh báo giảm",-1]);
+if(B.c<B.o&&A.c>A.o&&A.o<=B.c&&A.c>=B.o&&dn)o.push(["Nhấn chìm tăng (Bullish engulfing)",1]);
+if(B.c>B.o&&A.c<A.o&&A.o>=B.c&&A.c<=B.o&&upT)o.push(["Nhấn chìm giảm (Bearish engulfing)",-1]);
+if(Cc.c<Cc.o&&Cc.b>.5*Cc.r&&B.b<.3*Cc.b&&A.c>A.o&&A.c>(Cc.o+Cc.c)/2&&dn)o.push(["Sao mai (Morning star) – đảo chiều tăng",1]);
+if(Cc.c>Cc.o&&Cc.b>.5*Cc.r&&B.b<.3*Cc.b&&A.c<A.o&&A.c<(Cc.o+Cc.c)/2&&upT)o.push(["Sao hôm (Evening star) – đảo chiều giảm",-1]);
+return o}
+function levels(d){const n=d.length,i=session().open&&n>2?n-2:n-1,H=d[i].h,Lw=d[i].l,Cl=d[i].c,P=(H+Lw+Cl)/3,piv={R2:P+(H-Lw),R1:2*P-Lw,P,S1:2*P-H,S2:P-(H-Lw)};
+const w=d.slice(-60);let hi=-1e18,lo=1e18,ih=0,il=0;w.forEach((x,j)=>{if(x.h>hi){hi=x.h;ih=j}if(x.l<lo){lo=x.l;il=j}});
+const up=il<ih,fib=[0,.236,.382,.5,.618,.786,1].map(r=>[r,up?hi-r*(hi-lo):lo+r*(hi-lo)]);return{piv,fib,hi,lo,up}}
+let TECHH="";
+function techRender(){const el=$("tech");if(!el||C.length<60)return;const R=techRows(C),B=R.filter(r=>r[2]===1).length,Sl=R.filter(r=>r[2]===-1).length,N=R.filter(r=>r[2]!=null).length,sc=N?(B-Sl)/N:0,
+vd=sc>=.5?["MUA MẠNH","#0f9d58"]:sc>=.2?["MUA","#16a34a"]:sc>-.2?["TRUNG LẬP","#d99a00"]:sc>-.5?["BÁN","#e5383b"]:["BÁN MẠNH","#b91c1c"],
+lab=r=>r===1?'<span class="sg-b">Mua</span>':r===-1?'<span class="sg-s">Bán</span>':r===0?'<span class="sg-n">Trung lập</span>':"—",
+pt=patterns(C),lv=levels(C),F=x=>f(x);
+const h=`<div class="th"><b>Tổng hợp chỉ báo kỹ thuật (nến ngày)</b><span class="pill" style="background:${vd[1]}">${vd[0]}</span><small>Mua ${B} · Trung lập ${N-B-Sl} · Bán ${Sl}</small></div>
+<div class="tb"><table><thead><tr><th class="l">Chỉ báo</th><th>Giá trị</th><th>Tín hiệu</th></tr></thead><tbody>${R.map(r=>`<tr><td class="l">${r[0]}</td><td>${r[1]}</td><td>${lab(r[2])}</td></tr>`).join("")}</tbody></table></div>
+<div class="sub">Mẫu hình nến gần nhất</div><div style="font-size:13px">${NOOPEN?'<span style="color:var(--mut)">Chưa có giá mở cửa từ nguồn – không nhận diện mẫu hình.</span>':pt.length?pt.map(x=>`<div class="${x[1]>0?"sg-b":x[1]<0?"sg-s":"sg-n"}">• ${x[0]}</div>`).join(""):'<span style="color:var(--mut)">Không có mẫu hình đáng chú ý.</span>'}</div>
+<div class="sub">Điểm Pivot (cổ điển)</div><div class="lv"><div>R2<b>${F(lv.piv.R2)}</b></div><div>R1<b>${F(lv.piv.R1)}</b></div><div>Pivot<b>${F(lv.piv.P)}</b></div><div>S1<b>${F(lv.piv.S1)}</b></div><div>S2<b>${F(lv.piv.S2)}</b></div></div>
+<div class="sub">Fibonacci hồi quy (60 phiên: ${F(lv.lo)} → ${F(lv.hi)}, ${lv.up?"sóng tăng":"sóng giảm"})</div><div class="lv">${lv.fib.map(x=>`<div>${f(x[0]*100,1)}%<b>${F(x[1])}</b></div>`).join("")}</div>
+<div class="tnote">Chỉ báo tính theo công thức chuẩn trên toàn bộ lịch sử có sẵn${REAL?" (dữ liệu thật)":" (dữ liệu mô phỏng ở bản web – chạy gói có máy chủ để dùng dữ liệu thật)"}. Tín hiệu kỹ thuật chỉ mang tính tham khảo, không đảm bảo lợi nhuận.</div>`;
+if(h!==TECHH){el.innerHTML=h;TECHH=h}}
+/* ===== Nến phút: thật (máy chủ) hoặc mô phỏng (bản web) ===== */
+let RNG="m1",OVL={sma20:1,sma50:1,bb:0,fib:0,sr:0,rsi:1,macd:1,stoch:0},IB={},CVL=null,HOV=false;
+try{const z=JSON.parse(localStorage.getItem("ovl")||"null");if(z)Object.assign(OVL,z);const r=localStorage.getItem("rng");if(r&&/^(d1|d3|w1|m1|y1|all)$/.test(r))RNG=r}catch(e){}
+const RN={w1:5,m1:22,y1:250,all:1e9};
+function tsOfIdx(i){if(C[i]&&C[i].t)return C[i].t;const m=/(\d+)\/(\d+)\/(\d+)/.exec(lastTD());let d=new Date(Date.UTC(+m[3],m[2]-1,+m[1],2,0));for(let k=C.length-1;k>i;k--){d=new Date(d-864e5);while(d.getUTCDay()===0||d.getUTCDay()===6)d=new Date(d-864e5)}return Math.floor(d/1000)}
+const vnD=t=>{const x=new Date((t+7*3600)*1000);return{dd:String(x.getUTCDate()).padStart(2,"0"),mm:String(x.getUTCMonth()+1).padStart(2,"0"),yy:x.getUTCFullYear(),hh:String(x.getUTCHours()).padStart(2,"0"),mi:String(x.getUTCMinutes()).padStart(2,"0")}};
+function simIntra(days){const dc=C.slice(-days),res=days===1?5:15,mins=[];for(let m=540;m<690;m+=res)mins.push(m);for(let m=780;m<885;m+=res)mins.push(m);const out=[];
+dc.forEach((d,di)=>{const idx=C.length-dc.length+di,t0=tsOfIdx(idx)-2*3600*0,day0=Math.floor((t0+7*3600)/86400)*86400-7*3600,r=rng(hash(S+"i"+idx+days)+Math.round(d.c*100)),m=mins.length,o0=nz(d.o)?d.o:C[Math.max(0,idx-1)].c,rg=Math.max(d.h-d.l,d.c*.002),br=[0];for(let j=1;j<m;j++)br.push(br[j-1]+(r()-.5));const end=br[m-1],xs=br.map((b,j)=>o0+(d.c-o0)*j/(m-1)+(b-end*j/(m-1))*rg*.25).map(x=>Math.min(d.h,Math.max(d.l,x)));
+const ih=Math.floor(r()*m),il=(ih+1+Math.floor(r()*(m-1)))%m,w=mins.map((_,j)=>1+1.2*Math.abs(j/(m-1)-.5)*2+r()*.4),ws=w.reduce((a,b)=>a+b,0);let prev=o0;
+xs.forEach((cx,j)=>{const o=prev,c=j===m-1?d.c:cx,hh=Math.min(d.h,Math.max(o,c)+r()*rg*.04),ll=Math.max(d.l,Math.min(o,c)-r()*rg*.04);out.push({t:day0+mins[j]*60,o,h:j===ih?d.h:hh,l:j===il?d.l:ll,c,v:Math.round(d.v*w[j]/ws)});prev=c})});return out}
+function chartData(){if(RNG==="d1"||RNG==="d3"){const ib=IB[RNG],nd=RNG==="d1"?1:3;
+if(ib&&ib.sym===S&&ib.bars.length>=3)return{d:ib.bars,intra:1,n:ib.bars.length,cap:"Nến "+(nd===1?5:15)+" phút · "+ib.src+" · "+(nd===1?"phiên gần nhất":"3 phiên gần nhất")};
+if(!REAL){const b=simIntra(nd);return{d:b,intra:1,n:b.length,cap:"⚠ Nến phút MÔ PHỎNG (bản web chưa có máy chủ dữ liệu) – chỉ để minh họa"}}
+return{d:C,intra:0,n:Math.min(22,C.length),cap:(SERVER?"Đang tải nến phút…":"Chưa có dữ liệu nến phút")+" – tạm hiển thị nến ngày (22 phiên)"}}
+const n=Math.min(RN[RNG],C.length);return{d:C,intra:0,n,cap:"Nến ngày · "+n+" phiên"+(RNG!=="all"&&n<RN[RNG]?" (nguồn hiện có "+C.length+" phiên)":"")+(REAL?" · dữ liệu thật":" · dữ liệu mô phỏng")}}
+async function loadBars(force){if(!(SERVER&&!DIRECT&&REAL)||(RNG!=="d1"&&RNG!=="d3"))return;const m=RNG,sym=S,ib=IB[m];if(!force&&ib&&ib.sym===sym&&Date.now()-ib.t<(session().open?15000:120000))return;
+try{const j=await api("/api/bars?symbol="+encodeURIComponent(sym)+"&days="+(m==="d1"?1:3));if(S!==sym)return;IB[m]={sym,t:Date.now(),bars:j.bars,src:j.source};chart()}catch(e){}}
 function chart(){
-  const cv=$("cv"),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
-  cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext("2d");g.scale(dpr,dpr);
-  const st=getComputedStyle(document.documentElement),col=n=>st.getPropertyValue(n).trim()||"#888";
-  const up=col("--up"),dn=col("--dn"),line=col("--line"),mut=col("--mut");
-  const N=Math.min(C.length,W<500?60:90),d=C.slice(-N),off=C.length-N,pw=52,ph=H-86,vh=60;
-  let hi=Math.max(...d.map(a=>a.h)),lo=Math.min(...d.map(a=>a.l));const m=(hi-lo)*.06;hi+=m;lo-=m;
-  const y=v=>8+(hi-v)/(hi-lo)*(ph-8),cw=(W-pw)/N,vm=Math.max(...d.map(a=>a.v));
-  g.font="11px sans-serif";g.fillStyle=mut;g.strokeStyle=line;g.lineWidth=1;
-  for(let i=0;i<=5;i++){const v=lo+(hi-lo)*i/5,yy=y(v);g.beginPath();g.moveTo(0,yy);g.lineTo(W-pw,yy);g.stroke();g.fillText(f(v),W-pw+6,yy+4)}
-  d.forEach((a,i)=>{const cx=i*cw+cw/2,c=a.c>=a.o?up:dn;g.fillStyle=c;g.strokeStyle=c;
-    g.globalAlpha=.35;g.fillRect(cx-cw*.35,H-6-a.v/vm*vh,cw*.7,a.v/vm*vh);g.globalAlpha=1;
-    g.beginPath();g.moveTo(cx,y(a.h));g.lineTo(cx,y(a.l));g.stroke();
-    const t=y(Math.max(a.o,a.c)),b=Math.max(1.5,Math.abs(y(a.o)-y(a.c)));g.fillRect(cx-cw*.35,t,cw*.7,b)});
-  [[20,"#f5b700"],[50,"#38bdf8"]].forEach(([n,c])=>{g.beginPath();g.strokeStyle=c;g.lineWidth=1.6;let s=false;
-    d.forEach((a,i)=>{const v=sma(C,n,off+i);if(v==null)return;const px=i*cw+cw/2;s?g.lineTo(px,y(v)):g.moveTo(px,y(v));s=true});g.stroke()});
-  const lp=y(C[C.length-1].c);g.setLineDash([4,4]);g.strokeStyle=mut;g.lineWidth=1;g.beginPath();g.moveTo(0,lp);g.lineTo(W-pw,lp);g.stroke();g.setLineDash([]);
-  g.fillStyle=C[C.length-1].c>=C[C.length-2].c?up:dn;g.fillRect(W-pw,lp-9,pw,18);g.fillStyle="#fff";g.fillText(f(C[C.length-1].c),W-pw+6,lp+4);
-}
+const cv=$("cv"),dpr=window.devicePixelRatio||1,cd=chartData(),d=cd.d,I=calcInd(d),subs=["rsi","macd","stoch"].filter(k=>OVL[k]),phone=(cv.parentElement.clientWidth||600)<520,priceH=phone?250:330,pH=phone?74:88,H=priceH+subs.length*pH;
+cv.style.height=H+"px";const W=cv.clientWidth;if(!W)return;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
+const st=getComputedStyle(document.documentElement),col=k=>st.getPropertyValue(k).trim()||"#888",up=col("--up"),dn=col("--dn"),line=col("--line"),mut=col("--mut"),ink=col("--ink");
+const N=Math.min(cd.n,d.length),off=d.length-N,pw=52,cw=(W-pw)/N,ph=priceH-24,vh=phone?36:48;
+let hi=-1e18,lo=1e18;for(let i=off;i<d.length;i++){hi=Math.max(hi,d[i].h);lo=Math.min(lo,d[i].l);if(OVL.bb&&nz(I.bb.up[i])){hi=Math.max(hi,I.bb.up[i]);lo=Math.min(lo,I.bb.lo[i])}}const mg=(hi-lo)*.06||hi*.01;hi+=mg;lo-=mg;
+const y=v=>8+(hi-v)/(hi-lo)*(ph-8),X=i=>(i-off)*cw+cw/2,vm=Math.max(...d.slice(off).map(a=>a.v))||1;
+g.font="11px sans-serif";g.textBaseline="alphabetic";g.textAlign="left";g.lineWidth=1;
+for(let i=0;i<=5;i++){const v=lo+(hi-lo)*i/5,yy=y(v);g.strokeStyle=line;g.beginPath();g.moveTo(0,yy);g.lineTo(W-pw,yy);g.stroke();g.fillStyle=mut;g.fillText(f(v),W-pw+6,yy+4)}
+const pl=(arr,fy,c,w,dash)=>{g.beginPath();g.strokeStyle=c;g.lineWidth=w||1.5;g.setLineDash(dash||[]);let s=false;for(let i=off;i<d.length;i++){const v=arr[i];if(!nz(v)){s=false;continue}s?g.lineTo(X(i),fy(v)):g.moveTo(X(i),fy(v));s=true}g.stroke();g.setLineDash([])};
+d.slice(off).forEach((a,j)=>{const cx=j*cw+cw/2,c=a.c>=a.o?up:dn;g.fillStyle=c;g.strokeStyle=c;g.lineWidth=1;g.globalAlpha=.3;g.fillRect(cx-cw*.35,ph-a.v/vm*vh,Math.max(1,cw*.7),a.v/vm*vh);g.globalAlpha=1;g.beginPath();g.moveTo(cx,y(a.h));g.lineTo(cx,y(a.l));g.stroke();const t=y(Math.max(a.o,a.c)),b=Math.max(1.2,Math.abs(y(a.o)-y(a.c)));g.fillRect(cx-Math.max(.5,cw*.35),t,Math.max(1,cw*.7),b)});
+if(OVL.bb){g.globalAlpha=.08;g.fillStyle="#8b5cf6";g.beginPath();let s=false;for(let i=off;i<d.length;i++)if(nz(I.bb.up[i])){s?g.lineTo(X(i),y(I.bb.up[i])):g.moveTo(X(i),y(I.bb.up[i]));s=true}for(let i=d.length-1;i>=off;i--)if(nz(I.bb.lo[i]))g.lineTo(X(i),y(I.bb.lo[i]));g.closePath();g.fill();g.globalAlpha=1;pl(I.bb.up,y,"#8b5cf6",1.2);pl(I.bb.lo,y,"#8b5cf6",1.2);pl(I.bb.mid,y,"#8b5cf6",1,[3,3])}
+if(OVL.sma20)pl(I.s20,y,"#f5b700",1.6);if(OVL.sma50)pl(I.s50,y,"#38bdf8",1.6);
+const hl=(v,c,tx)=>{if(v<lo||v>hi)return;g.strokeStyle=c;g.lineWidth=1;g.setLineDash([5,4]);g.beginPath();g.moveTo(0,y(v));g.lineTo(W-pw,y(v));g.stroke();g.setLineDash([]);g.fillStyle=c;g.font="10.5px sans-serif";g.fillText(tx+" "+f(v),4,y(v)-3);g.font="11px sans-serif"};
+if(!cd.intra){const lv=levels(C);if(OVL.fib)lv.fib.forEach(q=>hl(q[1],"#a16207","Fib "+f(q[0]*100,1)+"%"));if(OVL.sr){hl(lv.piv.R2,dn,"R2");hl(lv.piv.R1,dn,"R1");hl(lv.piv.P,mut,"P");hl(lv.piv.S1,up,"S1");hl(lv.piv.S2,up,"S2")}}
+const lc=d[d.length-1].c,ref=cd.intra?d[0].o:(d.length>1?d[d.length-2].c:lc),lp=y(lc);g.setLineDash([4,4]);g.strokeStyle=mut;g.lineWidth=1;g.beginPath();g.moveTo(0,lp);g.lineTo(W-pw,lp);g.stroke();g.setLineDash([]);
+g.fillStyle=lc>=ref?up:dn;g.fillRect(W-pw,lp-9,pw,18);g.fillStyle="#fff";g.fillText(f(lc),W-pw+6,lp+4);
+// trục thời gian
+g.fillStyle=mut;g.textAlign="center";const tk=Math.min(5,N);let lastDay="";
+for(let q=0;q<tk;q++){const i=off+Math.round(q*(N-1)/Math.max(1,tk-1)),t=cd.intra?d[i].t:tsOfIdxD(d,i),v=vnD(t),tx=cd.intra?(RNG==="d3"?v.dd+"/"+v.mm+" "+v.hh+":"+v.mi:v.hh+":"+v.mi):(RNG==="all"||RNG==="y1"?v.mm+"/"+String(v.yy).slice(2):v.dd+"/"+v.mm);g.fillText(tx,Math.min(W-pw-18,Math.max(18,X(i))),priceH-6)}g.textAlign="left";
+// panels
+subs.forEach((k,si)=>{const y0=priceH+si*pH,top=y0+14,hh=pH-20;g.strokeStyle=line;g.lineWidth=1;g.beginPath();g.moveTo(0,y0+2);g.lineTo(W,y0+2);g.stroke();
+const Y=(v,a,b)=>top+(b-v)/(b-a)*hh,lab=(t,cc)=>{g.fillStyle=cc||ink;g.font="bold 11px sans-serif";g.fillText(t,4,y0+13);g.font="11px sans-serif"};
+if(k==="rsi"){lab("RSI(14)  "+(lastV(I.rsi)!=null?f(lastV(I.rsi),1):"—"));[30,70].forEach(v=>{g.strokeStyle=line;g.setLineDash([4,4]);g.beginPath();g.moveTo(0,Y(v,0,100));g.lineTo(W-pw,Y(v,0,100));g.stroke();g.setLineDash([]);g.fillStyle=mut;g.fillText(v,W-pw+6,Y(v,0,100)+4)});pl(I.rsi,v=>Y(v,0,100),"#f97316",1.6)}
+if(k==="macd"){const M=I.macd;let mx=0;for(let i=off;i<d.length;i++)[M.m[i],M.sg[i],M.h[i]].forEach(v=>{if(nz(v))mx=Math.max(mx,Math.abs(v))});mx=mx||1;lab("MACD(12,26,9)  hist "+(lastV(M.h)!=null?f(lastV(M.h),3):"—"));const fy=v=>Y(v,-mx*1.1,mx*1.1);g.strokeStyle=line;g.beginPath();g.moveTo(0,fy(0));g.lineTo(W-pw,fy(0));g.stroke();
+for(let i=off;i<d.length;i++)if(nz(M.h[i])){g.fillStyle=M.h[i]>=0?up:dn;g.globalAlpha=.55;const a=fy(M.h[i]),b=fy(0);g.fillRect(X(i)-Math.max(.5,cw*.3),Math.min(a,b),Math.max(1,cw*.6),Math.max(1,Math.abs(a-b)));g.globalAlpha=1}pl(M.m,fy,"#2563eb",1.4);pl(M.sg,fy,"#f97316",1.4)}
+if(k==="stoch"){lab("Stochastic(14,3,3)  %K "+(lastV(I.st.k)!=null?f(lastV(I.st.k),1):"—")+" · %D "+(lastV(I.st.d)!=null?f(lastV(I.st.d),1):"—"));[20,80].forEach(v=>{g.strokeStyle=line;g.setLineDash([4,4]);g.beginPath();g.moveTo(0,Y(v,0,100));g.lineTo(W-pw,Y(v,0,100));g.stroke();g.setLineDash([]);g.fillStyle=mut;g.fillText(v,W-pw+6,Y(v,0,100)+4)});pl(I.st.k,v=>Y(v,0,100),"#f97316",1.4);pl(I.st.d,v=>Y(v,0,100),"#2563eb",1.4)}});
+CVL={N,off,cw,d,intra:cd.intra};$("cvcap").textContent=cd.cap;if(!HOV)cvInfo(d.length-1)}
+function tsOfIdxD(d,i){if(d===C)return tsOfIdx(i);return d[i].t||0}
+function cvInfo(k){if(!CVL)return;const x=CVL.d[k];if(!x)return;const v=vnD(CVL.intra?x.t:tsOfIdxD(CVL.d,k));$("cvinfo").innerHTML=`<b style="color:var(--ink)">${v.dd}/${v.mm}${CVL.intra?" "+v.hh+":"+v.mi:"/"+v.yy}</b> · Mở ${nz(x.o)?f(x.o):"—"} · Cao ${f(x.h)} · Thấp ${f(x.l)} · Đóng <b style="color:var(--ink)">${f(x.c)}</b> · KL ${fv(x.v)}`}
+function cvMove(e){if(!CVL)return;const r=$("cv").getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/CVL.cw);if(i<0||i>=CVL.N)return;HOV=true;cvInfo(CVL.off+i)}
+$("cv").addEventListener("pointermove",cvMove);$("cv").addEventListener("pointerdown",cvMove);$("cv").addEventListener("pointerleave",()=>{HOV=false;if(CVL)cvInfo(CVL.d.length-1)});
+function setRng(r){RNG=r;try{localStorage.setItem("rng",r)}catch(e){}document.querySelectorAll("#rng button").forEach(b=>b.classList.toggle("on",b.dataset.r===r));HOV=false;loadBars(true);chart()}
+$("rng").onclick=e=>{if(e.target.dataset.r)setRng(e.target.dataset.r)};
+$("ovl").onclick=e=>{const k=e.target.dataset.o;if(!k)return;OVL[k]=OVL[k]?0:1;try{localStorage.setItem("ovl",JSON.stringify(OVL))}catch(x){}e.target.classList.toggle("on",!!OVL[k]);chart()};
+document.querySelectorAll("#rng button").forEach(b=>b.classList.toggle("on",b.dataset.r===RNG));document.querySelectorAll("#ovl button").forEach(b=>b.classList.toggle("on",!!OVL[b.dataset.o]));
+setInterval(()=>loadBars(),5000);
 function lastTD(){let d=new Date(Date.now()+7*36e5);if(d.getUTCDay()>0&&d.getUTCDay()<6&&d.getUTCHours()*60+d.getUTCMinutes()<540)d=new Date(d-864e5);while(d.getUTCDay()===0||d.getUTCDay()===6)d=new Date(d-864e5);return d.getUTCDate().toString().padStart(2,"0")+"/"+(d.getUTCMonth()+1).toString().padStart(2,"0")+"/"+d.getUTCFullYear()}
 function dayStats(){const x=C[C.length-1],tv=x.v;let share;
 if(REAL&&DAYV>0)share=DAYB/DAYV;else if(T.length>=6){let b=0,t=0;T.forEach(z=>{t+=z.v;if(z.b)b+=z.v});share=t?b/t:.5}
