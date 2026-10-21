@@ -73,7 +73,7 @@ def cached(key, ttl, fn):
 
 def board():
     """Bang gia CafeF thoi gian thuc. Truong: a=ma, b=tham chieu, l=gia khop gan nhat, k=thay doi (l-b),
-    v=cao nhat, w=thap nhat, n=tong khoi luong, Time=gio cap nhat. Gia tinh bang nghin dong."""
+    v=cao nhat, w=thap nhat, n=tong khoi luong, Time=gio cap nhat; so lenh 3 buoc: mua (e,f)(g,h)(i,j), ban (s,t)(q,r)(o,p), m=KL khop gan nhat. Gia tinh bang nghin dong."""
     def go():
         out = {}
         for center in (1, 2):
@@ -86,7 +86,10 @@ def board():
                     if not last:
                         last = b + (e.get("k") or 0) if e.get("k") else b
                     out[sym] = {"ref": float(b), "p": float(last), "h": float(e.get("v") or last), "lo": float(e.get("w") or last),
-                                "vol": int(e.get("totalvolume") or e.get("n") or 0), "time": e.get("Time", "")}
+                                "vol": int(e.get("totalvolume") or e.get("n") or 0), "time": e.get("Time", ""),
+                                "bid": [[float(e.get(a) or 0), int(e.get(b2) or 0)] for a, b2 in (("e", "f"), ("g", "h"), ("i", "j"))],
+                                "ask": [[float(e.get(a) or 0), int(e.get(b2) or 0)] for a, b2 in (("s", "t"), ("q", "r"), ("o", "p"))],
+                                "lv": int(e.get("m") or 0)}
             except Exception as ex:
                 print("cafef bang gia center=%d loi: %s" % (center, ex), file=sys.stderr)
         if not out:
@@ -392,7 +395,7 @@ class H(BaseHTTPRequestHandler):
                     for s in syms:
                         if s in bd:
                             q = bd[s]
-                            out[s] = {"src": "CafeF", "p": q["p"], "ref": q["ref"], "h": q["h"], "lo": q["lo"], "vol": q["vol"], "time": q["time"]}
+                            out[s] = {"src": "CafeF", "p": q["p"], "ref": q["ref"], "h": q["h"], "lo": q["lo"], "vol": q["vol"], "time": q["time"], "bid": q.get("bid"), "ask": q.get("ask"), "lv": q.get("lv", 0)}
                     if out:
                         prefetch_history(syms)
                         for s in syms:  # kem lich su 10 phien (neu co nguon) de tinh dong tien nganh

@@ -87,6 +87,8 @@ html[data-view="phone"] .card{padding:12px}html[data-view="phone"] .tb table{fon
 html[data-view="phone"] #mode{display:none}@media(max-width:600px){html:not([data-view="desktop"]) #mode{display:none}}
 html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:600px){html:not([data-view="desktop"]) main>section:nth-child(3){display:none}}
 .rng,.ovl{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.rng button{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:12.5px;font-weight:700;cursor:pointer}.rng button.on{background:var(--acc);border-color:var(--acc);color:#fff}.ovl button{padding:4px 9px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--mut);font-size:12px;font-weight:600;cursor:pointer}.ovl button.on{background:var(--bg);border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}.cvinfo{font-size:12px;color:var(--mut);min-height:18px;margin:2px 0}.cvcap{font-size:11.5px;color:var(--mut);margin-top:4px}#cv{touch-action:pan-y}.th{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 6px;font-size:14px}.th small{color:var(--mut)}.lv{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;margin-top:6px;font-size:12px;color:var(--mut)}.lv div{background:var(--bg);border-radius:8px;padding:5px 8px}.lv b{display:block;color:var(--ink);font-size:13px}.tnote{font-size:11.5px;color:var(--mut);margin-top:8px}.sg-b{color:var(--up);font-weight:700}.sg-s{color:var(--dn);font-weight:700}.sg-n{color:var(--warn);font-weight:700}.sub{font-size:13px;font-weight:700;margin:12px 0 2px}
+.bk{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}.bk th{font-size:11.5px;color:var(--mut);font-weight:600;padding:4px 6px;text-align:right}.bk td{padding:6px 8px;text-align:right;border-top:1px solid var(--line)}.bkh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 2px;font-size:14px}.bkh small{color:var(--mut);font-size:11.5px}.pbar{display:flex;height:8px;border-radius:99px;overflow:hidden;margin:8px 0 4px}.pbar i{display:block}
+#chartsec+section{align-self:start}
 </style>
 </head>
 <body>
@@ -123,6 +125,7 @@ html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:
 <div class="vol"><div>Tổng KL<b id="tv">-</b></div><div class="up">Mua chủ động<b id="bv">-</b></div><div class="dn">Bán chủ động<b id="sv">-</b></div></div>
 <div class="bar"><i id="bb" style="width:50%"></i></div>
 <div id="daysum"></div>
+<div id="book"></div>
 <div class="tape" id="tapewrap"><table><thead><tr><th>Giờ</th><th>Giá</th><th>KL</th><th>M/B</th></tr></thead><tbody id="tape"></tbody></table></div>
 </section>
 
@@ -214,7 +217,7 @@ let INSRC="",QSRC="",DAYB=0,DAYV=0,SERVER=false,REAL=false,API="",lastPoll=0,las
 let NOOPEN=false,DIRECT=false,BC={t:0,d:null};
 async function cafefBoard(){if(BC.d&&Date.now()-BC.t<3000)return BC.d;const out={};
 for(const c of [1,2]){try{const r=await fetch("https://banggia.cafef.vn/stockhandler.ashx?center="+c,{cache:"no-store"});const a=await r.json();
-(Array.isArray(a)?a:[]).forEach(e=>{if(!e||!e.a||!e.b)return;const l=e.l||(e.k?e.b+e.k:e.b);out[e.a]={src:"CafeF",p:+l,ref:+e.b,h:+(e.v||l),lo:+(e.w||l),vol:+(e.totalvolume||e.n||0),time:e.Time||""}})}catch(err){}}
+(Array.isArray(a)?a:[]).forEach(e=>{if(!e||!e.a||!e.b)return;const l=e.l||(e.k?e.b+e.k:e.b);out[e.a]={src:"CafeF",p:+l,ref:+e.b,h:+(e.v||l),lo:+(e.w||l),vol:+(e.totalvolume||e.n||0),time:e.Time||"",bid:[[e.e,e.f],[e.g,e.h],[e.i,e.j]].map(z=>[+z[0]||0,+z[1]||0]),ask:[[e.s,e.t],[e.q,e.r],[e.o,e.p]].map(z=>[+z[0]||0,+z[1]||0]),lv:+e.m||0}})}catch(err){}}
 if(!Object.keys(out).length)throw new Error("cafef");BC={t:Date.now(),d:out};return out}
 async function directApi(path){const u=new URL(path,"http://x"),sym=(u.searchParams.get("symbol")||"").toUpperCase();
 if(u.pathname==="/api/quotes"){const b=await cafefBoard(),q={};(u.searchParams.get("symbols")||"").split(",").forEach(s=>{if(b[s])q[s]=b[s]});return{ok:true,quotes:q}}
@@ -247,7 +250,7 @@ INSRC=j.source||INSRC;const b=j.bars;if(b.length){const x=C[C.length-1],day=t=>n
 if(MK[S]&&MK[S].vol>agg.v)agg.v=MK[S].vol;if(day(x.t)===day(b[0].t)){Object.assign(x,agg);if(noO)x.o=Math.min(Math.max(x.o,x.l),x.h)}else C.push({o:noO?agg.c:agg.o,...agg,t:b[0].t});
 if(!noO){b.filter(z=>z.t>lastBar).forEach(z=>{T.unshift({t:new Date(z.t*1000),p:z.c,v:z.v,b:z.c>=z.o})});T=T.slice(0,60)}lastBar=b[b.length-1].t;DAYV=agg.v;const rf=C[C.length-2].c;DAYB=noO?Math.round(DAYV*cl(.5+(agg.c-rf)/rf*8,.3,.7)):b.reduce((a,z)=>a+(z.c>=z.o?z.v:0),0)}
 lastOk=Date.now();render();showMode()}catch(e){}}
-async function realQuotes(){if(!REAL&&!SERVER)return;try{const j=await api("/api/quotes?symbols="+ALL.join(","));Object.entries(j.quotes).forEach(([k,v])=>{if(MK[k]){MK[k].p=v.p;MK[k].ref=v.ref;MK[k].hist=v.hist;MK[k].vol=v.vol;MK[k].time=v.time;MK[k].src=v.src;MK[k].real=1;QSRC=v.src||QSRC}});realFlows();if($("bubsrc"))$("bubsrc").textContent=" Nguồn % hiện tại: "+QSRC+"."}catch(e){}}
+async function realQuotes(){if(!REAL&&!SERVER)return;try{const j=await api("/api/quotes?symbols="+ALL.join(","));Object.entries(j.quotes).forEach(([k,v])=>{if(MK[k]){MK[k].p=v.p;MK[k].ref=v.ref;MK[k].hist=v.hist;MK[k].vol=v.vol;MK[k].time=v.time;MK[k].src=v.src;MK[k].bid=v.bid;MK[k].ask=v.ask;MK[k].lv=v.lv;MK[k].real=1;QSRC=v.src||QSRC}});realFlows();if($("bubsrc"))$("bubsrc").textContent=" Nguồn % hiện tại: "+QSRC+"."}catch(e){}}
 function load(sym){
   sym=sym.trim().toUpperCase();if(!sym)return;
   if(!VN30.includes(sym)){$("nm").textContent="⚠ "+sym+" không thuộc rổ VN30 – chỉ phân tích 30 mã VN30";$("nm").style.color="#fde68a";return}$("nm").style.color="";
@@ -270,7 +273,7 @@ function render(){
   $("chg").textContent=noRef?"% chưa có (chưa đối chiếu giá tham chiếu)":(ch>=0?"▲ +":"▼ ")+f(ch)+" ("+(pc>=0?"+":"")+f(pc)+"%)";$("chg").className=noRef?"ref":cls;
   $("sO").textContent=REAL&&!NOOPEN?f(x.o):"—";$("sH").textContent=noHL?"—":f(x.h);$("sL").textContent=noHL?"—":f(x.l);$("sR").textContent=noRef?"—":f(ref);
   $("clock").textContent=new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});
-  chart();tape();analyze();techRender();
+  chart();tape();analyze();techRender();bookRender();
 }
 
 /* ===== Thư viện chỉ báo kỹ thuật (công thức chuẩn) ===== */
@@ -320,6 +323,20 @@ return o}
 function levels(d){const n=d.length,i=session().open&&n>2?n-2:n-1,H=d[i].h,Lw=d[i].l,Cl=d[i].c,P=(H+Lw+Cl)/3,piv={R2:P+(H-Lw),R1:2*P-Lw,P,S1:2*P-H,S2:P-(H-Lw)};
 const w=d.slice(-60);let hi=-1e18,lo=1e18,ih=0,il=0;w.forEach((x,j)=>{if(x.h>hi){hi=x.h;ih=j}if(x.l<lo){lo=x.l;il=j}});
 const up=il<ih,fib=[0,.236,.382,.5,.618,.786,1].map(r=>[r,up?hi-r*(hi-lo):lo+r*(hi-lo)]);return{piv,fib,hi,lo,up}}
+
+/* ===== Sổ lệnh Mua / Bán (3 bước giá) ===== */
+const BOOK0={FPT:{bid:[[57.4,36700],[57.3,120800],[57.2,27800]],ask:[[57.5,17200],[57.6,40700],[57.7,50900]],time:"14:45 20/10/2026"}};
+function simBook(){const px=C[C.length-1].c,st=px<10?.01:px<50?.05:.1,r=rng(hash(S||"X")+Math.round(px*100)),o=r()<.5?0:1,vv=()=>Math.round((5+r()*150)*1000/100)*100,rd=v=>Math.round(v*100)/100;
+return{bid:[0,1,2].map(i=>[rd(px-(i+o)*st),vv()]),ask:[0,1,2].map(i=>[rd(px+(i+1-o)*st),vv()])}}
+function bookRender(){const el=$("book");if(!el||!C.length)return;const q=MK[S]||{};let b,src="",tm="",sim=false;
+if(REAL&&q.bid&&q.ask){b=q;src="CafeF";tm=q.time}else if(REAL){el.innerHTML='<div class="bkh"><b>Sổ lệnh Mua / Bán</b></div><div class="tnote">Nguồn giá hiện tại chưa cung cấp sổ lệnh cho mã này.</div>';return}
+else if(BOOK0[S]){b=BOOK0[S];src="CafeF · đóng cửa";tm=b.time}else{b=simBook();sim=true}
+const ss=session(),mx=Math.max(1,...b.bid.map(z=>z[1]),...b.ask.map(z=>z[1])),tb=b.bid.reduce((a,z)=>a+z[1],0),ta=b.ask.reduce((a,z)=>a+z[1],0),sh=tb+ta?tb/(tb+ta):.5,P=v=>v>0?f(v):"—",V=v=>v>0?v.toLocaleString("vi-VN"):"—";
+const rows=[0,1,2].map(i=>{const bd=b.bid[i]||[0,0],ak=b.ask[i]||[0,0],bp=bd[1]/mx*100,ap=ak[1]/mx*100;return `<tr><td class="up" style="background:linear-gradient(to left,rgba(15,157,88,.18) ${bp}%,transparent ${bp}%)">${V(bd[1])}</td><td class="up"><b>${P(bd[0])}</b></td><td class="dn"><b>${P(ak[0])}</b></td><td class="dn" style="background:linear-gradient(to right,rgba(229,56,59,.18) ${ap}%,transparent ${ap}%)">${V(ak[1])}</td></tr>`}).join("");
+el.innerHTML=`<div class="bkh"><b>Sổ lệnh Mua / Bán</b><small>${sim?'<span style="color:var(--warn)">⚠ MÔ PHỎNG</span> – chạy gói có máy chủ để có sổ lệnh thật':src+(tm?" · "+tm:"")+(REAL&&ss.open?" · cập nhật tự động":"")}</small></div>
+<table class="bk"><thead><tr><th>KL mua</th><th>Giá mua</th><th>Giá bán</th><th>KL bán</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="pbar"><i style="width:${sh*100}%;background:var(--up)"></i><i style="width:${(1-sh)*100}%;background:var(--dn)"></i></div>
+<div style="display:flex;justify-content:space-between;font-size:12px"><span class="up"><b>Mua ${f(sh*100,0)}%</b> (${tb.toLocaleString("vi-VN")})</span><span class="dn"><b>Bán ${f((1-sh)*100,0)}%</b> (${ta.toLocaleString("vi-VN")})</span></div>${REAL&&q.lv?`<div style="font-size:12px;color:var(--mut);margin-top:4px">Khớp gần nhất: <b style="color:var(--ink)">${f(C[C.length-1].c)}</b> × ${q.lv.toLocaleString("vi-VN")} cp</div>`:""}${!ss.open&&REAL?'<div class="tnote">Phiên đã đóng – hiển thị các lệnh còn lại cuối phiên.</div>':""}`}
 let TECHH="";
 function techRender(){const el=$("tech");if(!el||C.length<60)return;const R=techRows(C),B=R.filter(r=>r[2]===1).length,Sl=R.filter(r=>r[2]===-1).length,N=R.filter(r=>r[2]!=null).length,sc=N?(B-Sl)/N:0,
 vd=sc>=.5?["MUA MẠNH","#0f9d58"]:sc>=.2?["MUA","#16a34a"]:sc>-.2?["TRUNG LẬP","#d99a00"]:sc>-.5?["BÁN","#e5383b"]:["BÁN MẠNH","#b91c1c"],
@@ -444,6 +461,7 @@ $("top10").innerHTML=TOP.map((t,i)=>`<tr data-s="${t[0]}"><td class="l"><span cl
 document.querySelectorAll(".tb").forEach(e=>e.onclick=ev=>{const r=ev.target.closest("tr[data-s]");if(r){load(r.dataset.s);scrollTo({top:0,behavior:"smooth"})}});
 const ALL=[...new Set([...HOT.map(h=>h[0]),...TOP.map(t=>t[0]),...DIV.map(d=>d[0])])],MK={};
 ALL.forEach(s=>{const c=gen(s).candles;MK[s]={p:c[c.length-1].c,ref:c[c.length-2].c}});
+VN30.forEach(t=>{if(!MK[t]){ALL.push(t);const c=gen(t).candles;MK[t]={p:c[c.length-1].c,ref:c[c.length-2].c}}});
 function liveCh(s){const m=(s===S&&C.length>1)?{p:C[C.length-1].c,ref:C[C.length-2].c}:MK[s];return m?(m.p/m.ref-1)*100:0}
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 const SG={};function sig3m(t){if(SG[t])return SG[t];const c=gen(t).candles,r=[];for(let i=1;i<c.length;i++)r.push(Math.log(c[i].c/c[i-1].c));const m=r.reduce((a,b)=>a+b,0)/r.length,v=r.reduce((a,b)=>a+(b-m)*(b-m),0)/r.length;return SG[t]=Math.sqrt(v)*Math.sqrt(63)}
@@ -536,7 +554,7 @@ $("picksec").onclick=e=>{const r=e.target.closest("tr[data-s]");if(r){load(r.dat
 async function pullScan(){if(!SERVER||DIRECT)return;try{const j=await api("/api/scan?symbols="+UNI.join(","));Object.entries(j.data||{}).forEach(([s,d])=>{if(d.c.length>=60)RD[s]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r,src:d.src}});if(j.index&&j.index.length>60)RIDX=j.index;SCANN=j.ready+"/"+j.total+" mã"+(j.busy?" – đang nạp thêm":"");pickRender()}catch(e){}}
 pickRender();setInterval(pickRender,6000);setInterval(pullScan,20000);setTimeout(pullScan,1500);
 API=location.protocol.startsWith("http")?"":"http://localhost:8000";
-setInterval(()=>{if(SERVER)realQuotes()},session().open?6000:6000);
+let lastQ=0;setInterval(()=>{if(SERVER&&(session().open||Date.now()-lastQ>60000)){lastQ=Date.now();realQuotes()}},4000);
 function tryDirect(){cafefBoard().then(()=>{DIRECT=true;SERVER=true;realQuotes().then(()=>load(S||"FPT"))}).catch(()=>{})}
 fetch(API+"/api/ping",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.ok){SERVER=true;pullScan();realQuotes().then(()=>load(S||"FPT"))}else tryDirect()}).catch(tryDirect);
 load("FPT");
