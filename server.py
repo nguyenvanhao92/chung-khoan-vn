@@ -261,12 +261,17 @@ def scan_start(syms):
                 if time.time() - _scan["fail"].get(s, 0) < 600:
                     continue
                 try:
-                    c, src = history(s, 420)
+                    try:
+                        c, src = history(s, 3650)
+                    except Exception:
+                        c, src = history(s, 420)
                     try:
                         r = ratios(s)
                     except Exception:
                         r = (hit or {}).get("r")
-                    _scan["data"][s] = {"ts": time.time(), "c": c, "src": src, "r": r}
+                    top = max(c, key=lambda x: x["h"]) if c else None
+                    _scan["data"][s] = {"ts": time.time(), "c": c, "src": src, "r": r,
+                                        "ath": top["h"] if top else None, "athT": top["t"] if top else None, "n": len(c)}
                 except Exception as e:
                     _scan["fail"][s] = time.time()
                     print("scan loi", s, e, file=sys.stderr)
@@ -308,7 +313,7 @@ def scan_payload(syms):
                 c.append({"t": int(datetime.now(VN).replace(hour=9, minute=0, second=0, microsecond=0).timestamp()),
                           "o": q["ref"], "h": q["h"], "l": q["lo"], "c": q["p"], "v": q["vol"]})
         data[s] = {"o": [round(x["o"], 3) for x in c], "h": [round(x["h"], 3) for x in c], "l": [round(x["l"], 3) for x in c],
-                   "c": [round(x["c"], 3) for x in c], "v": [int(x["v"]) for x in c], "t": [x["t"] for x in c], "r": h.get("r"), "src": h.get("src")}
+                   "c": [round(x["c"], 3) for x in c], "v": [int(x["v"]) for x in c], "t": [x["t"] for x in c], "r": h.get("r"), "src": h.get("src"), "ath": h.get("ath"), "athT": h.get("athT"), "nAll": h.get("n")}
     idx = _scan["index"][1][-300:] if _scan["index"] else []
     return {"ok": True, "ready": len(data), "total": len(syms), "busy": _scan["busy"], "data": data,
             "index": [round(x["c"], 2) for x in idx]}
