@@ -92,6 +92,20 @@ html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 12px;overflow-x:auto}.tabs button{flex:1;padding:10px 12px;border:0;border-bottom:3px solid transparent;border-radius:10px 10px 0 0;background:transparent;color:var(--mut);font-weight:700;font-size:14px;white-space:nowrap;cursor:pointer}.tabs button.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--bg)}.tpanel{display:none}.tpanel.on{display:block}.pcalc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0}.pcalc label{font-size:12px;color:var(--mut)}.pcalc input,.pcalc select{width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:15px;font-weight:700}.strat{padding:12px 14px;border-left:4px solid var(--acc);background:var(--bg);border-radius:10px;font-size:14px;margin-bottom:6px}.strat b{color:var(--ink)}
 #chips{display:none!important}
 .fnd{margin-top:12px}.fnd h3{font-size:13px;margin:0 0 4px;color:var(--ink)}.fnd .fr{display:flex;justify-content:space-between;gap:8px;padding:5px 2px;border-bottom:1px solid var(--line);font-size:12.5px}.fnd .fr:last-of-type{border-bottom:0}.fnd .fr b{white-space:nowrap}.fnd .fr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fnd small{display:block;color:var(--mut);font-size:10.5px;margin-top:4px}
+
+/* ===== Bố cục thông minh: lấp đầy khoảng trống, giao diện hiện đại ===== */
+main{max-width:1560px;grid-auto-flow:row dense;align-items:stretch}
+header .wrap{max-width:1560px;margin-left:auto;margin-right:auto}
+.card{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--card) 92%,var(--acc)) 0,var(--card) 90px);backdrop-filter:blur(6px);transition:box-shadow .25s,border-color .25s}
+.card:before{content:"";position:absolute;left:18px;right:18px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--acc),#22d3ee,transparent);opacity:.85}
+.card:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));box-shadow:0 8px 30px color-mix(in srgb,var(--acc) 16%,transparent)}
+#ratiosec,#tabsec,#chartsec+section{display:flex;flex-direction:column}
+#ratiosec>*{flex:none}#ratiosec .gauge{margin:auto 0}#ratiosec .note{margin-top:auto}
+#tabsec>*:last-child{margin-bottom:0}
+@media(max-width:1100px){html:not([data-view="desktop"]) #tabsec{grid-column:span 12}html:not([data-view="desktop"]) #ratiosec{grid-column:span 12}}
+.tb.tape{max-height:none;overflow:visible}
+#ratiosec .gauge{flex-direction:column;justify-content:center;gap:18px;flex:1;margin:0}#ratiosec .gl{width:100%}#ratiosec .ring{transform:scale(1.25);margin:14px 0}
+html[data-view="phone"] #chartsec+section{display:none}@media(max-width:600px){html:not([data-view="desktop"]) #chartsec+section{display:none}html:not([data-view="desktop"]) #ratiosec .ring{transform:none;margin:0}}html[data-view="phone"] #ratiosec .ring{transform:none;margin:0}
 </style>
 </head>
 <body>
@@ -132,7 +146,7 @@ html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:
 <div id="funds"></div>
 </section>
 
-<section class="card c12" id="tabsec">
+<section class="card c8" id="tabsec">
 <h2>Phân Tích Kỹ Thuật</h2>
 <div class="tabs" id="tabs"><button data-t="i">Chỉ Báo Kỹ Thuật</button><button data-t="a">Phân Tích</button><button data-t="k">Khung Giá</button></div>
 <div class="tpanel" data-t="i"><div id="tech"></div></div>
@@ -152,7 +166,7 @@ html[data-view="phone"] main>section:nth-child(3){display:none}@media(max-width:
 </div>
 </section>
 
-<section class="card c12">
+<section class="card c4" id="ratiosec">
 <h2>Tỷ Lệ Đầu Tư</h2>
 <div class="gauge">
 <div class="ring" id="ring"><span id="rp">-</span></div>
@@ -442,8 +456,13 @@ return{d:C,intra:0,n:Math.min(22,C.length),cap:(SERVER?"Đang tải nến phút�
 const n=Math.min(RN[RNG],C.length);return{d:C,intra:0,n,cap:"Nến ngày · "+n+" phiên"+(RNG!=="all"&&n<RN[RNG]?" (nguồn hiện có "+C.length+" phiên)":"")+(REAL?" · dữ liệu thật":" · dữ liệu mô phỏng")}}
 async function loadBars(force){if(!(SERVER&&!DIRECT&&REAL)||(RNG!=="d1"&&RNG!=="d3"))return;const m=RNG,sym=S,ib=IB[m];if(!force&&ib&&ib.sym===sym&&Date.now()-ib.t<(session().open?15000:120000))return;
 try{const j=await api("/api/bars?symbol="+encodeURIComponent(sym)+"&days="+(m==="d1"?1:3));if(S!==sym)return;IB[m]={sym,t:Date.now(),bars:j.bars,src:j.source};chart()}catch(e){}}
+let CHX=0;
+function fitChart(){try{const a=$("chartsec"),b=a&&a.nextElementSibling;if(!a||!b||!C.length)return;const cs=getComputedStyle(b);if(cs.display==="none"||getComputedStyle(a).display==="none")return;
+if(a.getBoundingClientRect().left>=b.getBoundingClientRect().left||Math.abs(a.getBoundingClientRect().top-b.getBoundingClientRect().top)>8){if(CHX){CHX=0;chart()}return}
+const k=[...b.children].filter(e=>e.offsetHeight>0),nat=k.length?k[k.length-1].getBoundingClientRect().bottom-k[0].getBoundingClientRect().top+(parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0)+2:0;
+const ka=[...a.children].filter(e=>e.offsetHeight>0),ca=getComputedStyle(a),own=ka[ka.length-1].getBoundingClientRect().bottom-ka[0].getBoundingClientRect().top+(parseFloat(ca.paddingTop)||0)+(parseFloat(ca.paddingBottom)||0)+2-CHX,ex=Math.max(0,Math.min(420,Math.round(nat-own)));if(Math.abs(ex-CHX)>3){CHX=ex;chart()}}catch(e){}}
 function chart(){
-const cv=$("cv"),dpr=window.devicePixelRatio||1,cd=chartData(),d=cd.d,I=calcInd(d),subs=["rsi","macd","stoch"].filter(k=>OVL[k]),phone=(cv.parentElement.clientWidth||600)<520,priceH=phone?250:330,pH=phone?74:88,H=priceH+subs.length*pH;
+const cv=$("cv"),dpr=window.devicePixelRatio||1,cd=chartData(),d=cd.d,I=calcInd(d),subs=["rsi","macd","stoch"].filter(k=>OVL[k]),phone=(cv.parentElement.clientWidth||600)<520,priceH=(phone?250:330)+(phone?0:CHX),pH=phone?74:88,H=priceH+subs.length*pH;
 cv.style.height=H+"px";const W=cv.clientWidth;if(!W)return;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
 const st=getComputedStyle(document.documentElement),col=k=>st.getPropertyValue(k).trim()||"#888",up=col("--up"),dn=col("--dn"),line=col("--line"),mut=col("--mut"),ink=col("--ink");
 const N=Math.min(cd.n,d.length),off=d.length-N,pw=52,cw=(W-pw)/N,ph=priceH-24,vh=phone?36:48;
@@ -525,7 +544,7 @@ $("chips").innerHTML=VN30.map(k=>`<span class="chip" data-s="${k}">${k}</span>`)
 $("chips").onclick=e=>{if(e.target.dataset.s)load(e.target.dataset.s)};
 $("go").onclick=()=>load($("sym").value);
 $("sym").onkeydown=e=>{if(e.key==="Enter")load($("sym").value)};
-addEventListener("resize",()=>C.length&&chart());
+addEventListener("resize",()=>{C.length&&chart();setTimeout(fitChart,120)});setInterval(fitChart,1500);
 const HOT=[["VCB",1250],["FPT",980],["HPG",870],["MWG",640],["SSI",575],["VHM",520],["TCB",470],["MBB",430],["GAS",360],["VNM",310]];
 const DIV=[["HPG","03/11/2026","05/11/2026","500đ/cp (5%) tiền mặt"],["VNM","12/11/2026","14/11/2026","1.000đ/cp (10%) tiền mặt"],["GAS","18/11/2026","20/11/2026","1.500đ/cp (15%) tiền mặt"],["ACB","24/11/2026","26/11/2026","10% cổ phiếu thưởng"],["MBB","01/12/2026","03/12/2026","15% cổ phiếu + 500đ tiền mặt"],["SAB","09/12/2026","11/12/2026","1.800đ/cp (18%) tiền mặt"],["PLX","16/12/2026","18/12/2026","700đ/cp (7%) tiền mặt"],["FPT","23/12/2026","25/12/2026","1.000đ/cp (10%) tiền mặt"]];
 const TOP=[["FPT","Công nghệ",78],["VCB","Ngân hàng",75],["MWG","Bán lẻ",73],["HPG","Thép",71],["SSI","Chứng khoán",69],["TCB","Ngân hàng",68],["GAS","Dầu khí",66],["VHM","Bất động sản",64],["VNM","Hàng tiêu dùng",62],["PVS","Dịch vụ dầu khí",60]];
