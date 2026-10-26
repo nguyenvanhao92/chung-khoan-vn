@@ -342,7 +342,7 @@ def scan_payload(syms):
                    "c": [round(x["c"], 3) for x in c], "v": [int(x["v"]) for x in c], "t": [x["t"] for x in c], "r": h.get("r"), "src": h.get("src"), "ath": h.get("ath"), "athT": h.get("athT"), "nAll": h.get("n")}
     idx = _scan["index"][1][-300:] if _scan["index"] else []
     return {"ok": True, "ready": len(data), "total": len(syms), "busy": _scan["busy"], "data": data,
-            "index": [round(x["c"], 2) for x in idx]}
+            "index": [round(x["c"], 2) for x in idx], "indexT": [x["t"] for x in idx]}
 
 
 NEWS_FEEDS = [("VnEconomy", "https://vneconomy.vn/chung-khoan.rss"), ("VnEconomy", "https://vneconomy.vn/nhip-cau-doanh-nghiep.rss"),
