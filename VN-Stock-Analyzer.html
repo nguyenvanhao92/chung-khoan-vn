@@ -214,8 +214,8 @@ html[data-view="phone"] .pgt.al :is(th,td):is(:nth-child(2),:nth-child(3),:nth-c
 <div class="note">⚠ Số tiền các quỹ là DỮ LIỆU MẪU, không tự cập nhật (chưa có nguồn công khai). Tỷ lệ thắng thay đổi theo giá. Bấm vào mã để phân tích.</div></section>
 
 <section class="card c12" id="divsec"><h2>Cổ tức</h2>
-<div class="tape tb"><table><thead><tr><th class="l">Mã chứng khoán</th><th>Ngày mua cổ tức</th><th>Ngày hưởng cổ tức</th><th>Mức hưởng cổ tức</th></tr></thead><tbody id="div"></tbody></table></div>
-<div class="note">Ngày mua = ngày giao dịch cuối cùng còn quyền nhận cổ tức; Ngày hưởng = ngày đăng ký cuối cùng (chốt danh sách).</div></section>
+<div class="tape tb"><table><thead><tr><th class="l">Mã chứng khoán</th><th>Ngày mua cuối (còn quyền)</th><th>Ngày GDKHQ</th><th>Mức hưởng · thanh toán</th></tr></thead><tbody id="div"></tbody></table></div>
+<div class="note">Dữ liệu thật từ VNDIRECT (finfo). Ngày GDKHQ = ngày giao dịch không hưởng quyền; Ngày mua cuối = phiên liền trước (mua đến hết phiên này vẫn nhận, tính theo T+2). Bản web không có máy chủ có thể không tải được; không dùng số mẫu.</div></section>
 
 
 
@@ -254,7 +254,7 @@ const REFP={ACB:20.25,BCM:39.2,BID:33.65,BVH:70.7,CTG:30.5,GAS:76.7,GVR:31.35,HD
 const knownPct=s=>s in REFP||(typeof MK!=="undefined"&&MK[s]&&MK[s].real);
 const HL={FPT:[57.8,56.8],HPG:[21.2,20.55],ACB:[20.45,20.2],BID:[33.75,33.25],CTG:[30.45,29.95],GAS:[77.2,76.1],HDB:[22.6,21.95]};
 const VOL={ACB:5070400,BCM:854100,BID:2242300,BVH:580400,CTG:6829400,GVR:1335600,HDB:12241000,EIB:2532500,FPT:3441700,VCB:3671500,HPG:25476200,VNM:849600,VHM:12814800,GAS:276400,MBB:7650000};
-var LIST={},MKT="o",MKEX="ALL",LISTT="";
+var SCANOK=false,DIVR=null,DIVERR="",LIST={},MKT="o",MKEX="ALL",LISTT="";
 const VN30=["ACB","BCM","BID","BVH","CTG","FPT","GAS","GVR","HDB","HPG","LPB","MBB","MSN","MWG","PLX","SAB","SHB","SSB","SSI","STB","TCB","TPB","VCB","VHM","VIB","VIC","VJC","VNM","VPB","VRE"];
 let S=null,C=[],T=[],timer;
 const $=id=>document.getElementById(id);
@@ -401,7 +401,7 @@ function simBook(){const px=C[C.length-1].c,st=px<10?.01:px<50?.05:.1,r=rng(hash
 return{bid:[0,1,2].map(i=>[rd(px-(i+o)*st),vv()]),ask:[0,1,2].map(i=>[rd(px+(i+1-o)*st),vv()])}}
 
 const FUNDS=["Dragon Capital (VEIL)","VinaCapital (VOF)","Franklin Templeton","Fubon FTSE Vietnam ETF","E1VFVN30 ETF (VFM)","Kim Growth Fund","PYN Elite Fund","Samsung Vietnam Fund","Mirae Asset Vietnam","Norges Bank (Na Uy)","Amundi Vietnam","Vanguard Emerging Markets"];
-function fundRender(){const el=$("funds");if(!el||!S)return;const r=rng(Math.abs(hash("fund"+S))+7),pool=FUNDS.slice().sort(()=>r()-.5).slice(0,6),base=.6+r()*14;
+function fundRender(){const el=$("funds");if(!el||!S)return;el.innerHTML="";return;const r=rng(Math.abs(hash("fund"+S))+7),pool=FUNDS.slice().sort(()=>r()-.5).slice(0,6),base=.6+r()*14;
 const rows=pool.map((n,i)=>({n,v:base*(.25+r()*1.6)})).sort((a,b)=>b.v-a.v);
 el.innerHTML=`<div class="fnd"><h3>Quỹ lớn đang nắm giữ ${S}</h3>${rows.map(x=>`<div class="fr"><span>${x.n}</span><b>${f(x.v,1)} triệu cp</b></div>`).join("")}<small>⚠ Số liệu MINH HỌA, chưa phải dữ liệu công bố của các quỹ (cần nguồn báo cáo danh mục của từng quỹ).</small></div>`}
 function bookRender(){const el=$("book");if(!el||!C.length)return;const q=MK[S]||{};let b,src="",tm="",sim=false;
@@ -720,7 +720,8 @@ function liveTables(){
 const hs=HOT.slice().sort((a,b)=>b[1]-a[1]);
 $("hot").innerHTML=hs.map((h,i)=>{const w=cl(Math.round(52+(Math.abs(hash(h[0]))%20)+liveCh(h[0])*3),45,90);return `<tr data-s="${h[0]}"><td class="l"><span class="rk">${i+1}</span><span class="sym">${h[0]}</span></td><td>${h[1].toLocaleString("vi-VN")} tỷ</td><td><span class="pill" style="background:${wc(w)}">${w}%</span></td></tr>`}).join("");
 try{topRender()}catch(e){}
-$("div").innerHTML=DIV.map(d=>{const p=d[1].split("/"),n=Math.ceil((new Date(+p[2],p[1]-1,+p[0])-Date.now())/864e5);return `<tr data-s="${d[0]}"><td class="l sym">${d[0]}</td><td>${d[1]}<br><small style="color:var(--mut)">${n>0?"còn "+n+" ngày":"đã qua"}</small></td><td>${d[2]}</td><td>${d[3]}</td></tr>`}).join("")}
+if(DIVR){$("div").innerHTML=dividendRows()}else $("div").innerHTML=`<tr><td class="l" colspan="4" style="white-space:normal">${DIVERR||"Đang kết nối nguồn lịch cổ tức VNDIRECT…"}</td></tr>`;
+void DIV.map(d=>{const p=d[1].split("/"),n=Math.ceil((new Date(+p[2],p[1]-1,+p[0])-Date.now())/864e5);return `<tr data-s="${d[0]}"><td class="l sym">${d[0]}</td><td>${d[1]}<br><small style="color:var(--mut)">${n>0?"còn "+n+" ngày":"đã qua"}</small></td><td>${d[2]}</td><td>${d[3]}</td></tr>`}).join("")}
 function mkTick(){liveTables()}
 mkTick();setInterval(mkTick,1800);setInterval(()=>{$("clock").textContent=new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});showMode()},1000);
 function setView(v){document.documentElement.dataset.view=v;try{localStorage.setItem("vw",v)}catch(e){}
@@ -835,7 +836,7 @@ const b=top[0];$("pklead").innerHTML=b?`<b>${H.n} (${H.hold}):</b> mã dẫn đ�
 $("pknote").innerHTML=(real?`✔ Chấm điểm trên lịch sử giá thật ${res.length}/${UNI.length} mã${SCANN?" ("+SCANN+")":""} (VNDIRECT/Entrade/CafeF)${res.some(r=>r.e.l.fund)?", có thêm P/E, P/B, ROE (VNDIRECT)":""}, so sánh sức mạnh với VN-Index thật. `:`⚠ <b>Bản web chưa có máy chủ: lịch sử giá là MÔ PHỎNG, chỉ để minh họa cách chấm điểm.</b> Chạy gói VN-Stock-Analyzer-Full.zip để dùng dữ liệu thật. `)+`Điểm = trung bình có trọng số: ngắn hạn (xu hướng SMA20, MACD, RSI, khối lượng, đột phá, sức mạnh so VN-Index); trung hạn (SMA50/100, động lượng 60 phiên, vượt VN-Index, thanh khoản); dài hạn (SMA200, xu hướng 6 tháng, biến động, ROE, P/E, P/B). Mục tiêu = biên độ biến động × điểm (có giới hạn); cắt lỗ theo biến động. Tỷ lệ thắng là điểm quy đổi, không phải thống kê đã kiểm chứng; không phải lời khuyên đầu tư.`}
 $("ptabs").onclick=e=>{const h=e.target.closest("button");if(h){PICKH=h.dataset.h;pickRender()}};
 $("picksec").onclick=e=>{const r=e.target.closest("tr[data-s]");if(r){load(r.dataset.s);scrollTo({top:0,behavior:"smooth"})}};
-async function pullScan(){if(!SERVER||DIRECT)return;try{const j=await api("/api/scan?symbols="+UNI.join(","));Object.entries(j.data||{}).forEach(([s,d])=>{if(d.c.length>=60)RD[s]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r,src:d.src,ath:d.ath,athT:d.athT}});if(j.index&&j.index.length>60)RIDX=j.index;SCANN=j.ready+"/"+j.total+" mã"+(j.busy?" – đang nạp thêm":"");pickRender();dayRender()}catch(e){}}
+async function pullScan(){if(!SERVER||DIRECT)return;try{const j=await api("/api/scan?symbols="+UNI.join(","));Object.entries(j.data||{}).forEach(([s,d])=>{if(d.c.length>=60)RD[s]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r,src:d.src,ath:d.ath,athT:d.athT}});if(j.index&&j.index.length>60)RIDX=j.index;SCANN=j.ready+"/"+j.total+" mã"+(j.busy?" – đang nạp thêm":"");SCANOK=!j.busy&&j.total>0&&j.ready>=j.total*.9;pickRender();dayRender()}catch(e){}}
 pfInit();topRender();newsLoad();setInterval(newsLoad,300000);pickRender();setInterval(pickRender,6000);dayRender();setInterval(dayRender,6000);setInterval(pullScan,20000);setTimeout(pullScan,1500);
 API=location.protocol.startsWith("http")?"":"http://localhost:8000";
 let lastQ=0;setInterval(()=>{if(SERVER&&(session().open||Date.now()-lastQ>60000)){lastQ=Date.now();realQuotes()}},4000);
@@ -846,7 +847,8 @@ load("FPT");
 /* ===== Toàn thị trường (tất cả mã niêm yết) ===== */
 
 async function listLoad(){try{if(SERVER&&!DIRECT){const j=await api("/api/symbols");LIST={};j.rows.forEach(r=>LIST[r[0]]={ex:r[1],p:r[2],ref:r[3],vol:r[4],h:r[5],lo:r[6]});LISTT=j.time||""}else if(DIRECT){const b=await cafefBoard();LIST={};Object.entries(b).forEach(([k,v])=>LIST[k]={ex:v.ex||"",p:v.p,ref:v.ref,vol:v.vol,h:v.h,lo:v.lo});LISTT=""}}catch(e){}
-try{$("symlist").innerHTML=Object.keys(LIST).sort().map(k=>`<option value="${k}">${LIST[k].ex}</option>`).join("")}catch(e){}mktRender()}
+try{$("symlist").innerHTML=Object.keys(LIST).sort().map(k=>`<option value="${k}">${LIST[k].ex}</option>`).join("")}catch(e){}try{uniGrow()}catch(e){}mktRender()}
+function uniGrow(){if(!SERVER||DIRECT)return;const a=Object.entries(LIST).filter(([k,q])=>q.vol&&q.p&&/^[A-Z]{3}$/.test(k)&&!UNI.includes(k)).map(([k,q])=>[k,q.p*q.vol]).sort((x,y)=>y[1]-x[1]);let n=0;while(UNI.length<120&&n<a.length){UNI.push(a[n][0]);n++}}
 function mktRows(){const a=[];Object.entries(LIST).forEach(([s,q])=>{if(MKEX!=="ALL"&&q.ex!==MKEX)return;if(!q.ref||!q.p)return;a.push({s,ex:q.ex,p:q.p,pc:(q.p/q.ref-1)*100,vol:q.vol,val:q.p*q.vol/1e6})});return a}
 function mktRender(){const B=$("mkbody");if(!B)return;const n=Object.keys(LIST).length;
 const ex=["HOSE","HNX","UPCoM"].map(e=>[e,Object.values(LIST).filter(q=>q.ex===e).length]);
@@ -867,7 +869,7 @@ setInterval(()=>{if(document.documentElement.dataset.page!=="pf")listLoad()},300
 
 /* ===== Đầu tư demo tự học ===== */
 var DEMO=null,PFT="p";const DM_AMT=1e6,DM_HZ={t:{n:"Lướt sóng T+",hold:7},s:{n:"Ngắn hạn",hold:28},m:{n:"Trung hạn",hold:90},l:{n:"Dài hạn",hold:365}};
-function dmLoad(){try{DEMO=JSON.parse(localStorage.getItem("demo1")||"null")}catch(e){DEMO=null}if(!DEMO||!DEMO.e)DEMO=null}
+function dmLoad(){try{DEMO=JSON.parse(localStorage.getItem("demo1")||"null")}catch(e){DEMO=null}if(!DEMO||!DEMO.e||DEMO.v!==2){if(DEMO){try{localStorage.removeItem("demo1")}catch(e){}}DEMO=null}}
 function dmSave(){try{localStorage.setItem("demo1",JSON.stringify(DEMO))}catch(e){}}
 function dmVN(){const d=new Date(Date.now()+7*36e5+(DEMO&&DEMO.vd?DEMO.vd*864e5:0));return{ds:d.toISOString().slice(0,10),wd:d.getUTCDay(),m:d.getUTCHours()*60+d.getUTCMinutes(),t:d.getTime()}}
 function dmPx(s){const q=LIST&&LIST[s];if(q&&q.p&&SERVER&&!DIRECT||q&&q.p&&DIRECT)return q.p;const m=MK[s];if(m&&m.real&&m.p)return m.p;try{const c=uniC(s).c;return c[c.length-1].c*((DEMO&&DEMO.sim&&DEMO.sim[s])||1)}catch(e){return null}}
@@ -876,7 +878,7 @@ const dmFac=w=>String(w).replace(/[\d.,%×]+/g,"").replace(/\s+/g," ").trim().sp
 function dmCands(hz){const out=[];try{if(hz==="t"){const r=swingCalc();r.top.forEach(e=>out.push({s:e.s,px:e.px,sc:e.F||e.sc,win:e.win,tg:e.t1,stop:e.stop,why:e.why,sim:e.sim}))}else{const {res}=pickAll();res.slice().sort((a,b)=>b.e[hz].sc-a.e[hz].sc).slice(0,5).forEach(t=>{const e=t.e[hz];out.push({s:t.s,px:t.e.px,sc:e.sc,win:e.win,tg:e.tg,stop:e.stop,why:e.why,sim:t.sim})})}}catch(e){}return out}
 function dmAdj(c){if(!DEMO||!DEMO.f)return 0;let a=0,k=0;(c.why||[]).forEach(w=>{const f=DEMO.f[dmFac(w)];if(f&&f.n>=3){a+=(f.w/f.n-.5)*20;k++}});return k?a/k:0}
 function dmPick(hz){let c=dmCands(hz);if(!c.length)return null;const nClosed=DEMO?DEMO.e.filter(x=>x.hz===hz&&x.cl).length:0;if(nClosed>=10){c=c.slice(0,3).map(x=>({...x,adj:dmAdj(x)})).sort((a,b)=>(b.sc+b.adj)-(a.sc+a.adj))}return c[0]}
-function dmCanStart(){return Object.keys(RD).length>0||!SERVER}
+function dmCanStart(){return SERVER?SCANOK:true}
 function dmEnter(note){const v=dmVN();let n=0;["t","s","m","l"].forEach(hz=>{const c=dmPick(hz);if(!c||!c.px)return;const px=dmPx(c.s)||c.px;DEMO.e.push({id:DEMO.e.length+1,hz,s:c.s,d:v.ds,t:v.t,px,qty:DM_AMT/(px*1000),tg:c.tg,stop:c.stop,sc:c.sc,win:c.win,why:(c.why||[]).map(dmFac),real:dmReal(c.s),note:note||"",cl:null});n++});if(n)DEMO.days.push(v.ds);dmSave();return n}
 function dmEval(){if(!DEMO)return;const v=dmVN();let ch=0;DEMO.e.forEach(x=>{if(x.cl)return;const p=dmPx(x.s);if(!p)return;let ex=null,why="";
 let hi=p,lo=p;if(x.real&&RD[x.s]){const c=RD[x.s].c.filter(z=>z.t&&z.t*1000>x.t);c.forEach(z=>{hi=Math.max(hi,z.h);lo=Math.min(lo,z.l)})}
@@ -888,7 +890,7 @@ function dmStats(list){const L=list.map(x=>{const p=x.cl?x.cl.pnl:((dmPx(x.s)||x
 const dmStar=v=>v==null?'<span class="dmst"><i>★★★★★</i></span>':`<span class="dmst">${"★".repeat(Math.floor(v))}${v%1?"⯨":""}<i>${"★".repeat(5-Math.ceil(v))}</i></span>`;
 const dmVnd=v=>Math.round(v).toLocaleString("vi-VN")+" đ",dmP=v=>(v>=0?"+":"")+f(v,2)+"%";
 function dmRender(){const B=$("demoB");if(!B)return;dmLoad();
-if(!DEMO){if(dmCanStart()){DEMO={start:Date.now(),vd:0,e:[],f:{},days:[],sim:{},real:Object.keys(RD).length>0};if(dmEnter("Tự động khởi tạo"))return dmRender()}B.innerHTML='<div class="lead">Đang chờ dữ liệu phân tích để tự động vào lệnh demo đầu tiên (1.000.000 đ ảo cho mã đứng đầu mỗi tab)…</div>';return}
+if(!DEMO){if(dmCanStart()){DEMO={v:2,start:Date.now(),vd:0,e:[],f:{},days:[],sim:{},real:Object.keys(RD).length>0};if(dmEnter("Tự động khởi tạo"))return dmRender()}B.innerHTML='<div class="lead">Đang chờ dữ liệu phân tích để tự động vào lệnh demo đầu tiên (1.000.000 đ ảo cho mã đứng đầu mỗi tab)…</div>';return}
 dmEval();const all=DEMO.e,op=all.filter(x=>!x.cl),cls=all.filter(x=>x.cl),inv=all.length*DM_AMT,val=all.reduce((a,x)=>a+x.qty*1000*(x.cl?x.cl.px:(dmPx(x.s)||x.px)),0),pl=val-inv,st=dmStats(all),simMode=!all.some(x=>x.real);
 const conf=st.n>=30?"đủ mẫu":st.n>=10?"tạm thời":"sơ bộ, chưa đủ mẫu";
 const hzc=Object.keys(DM_HZ).map(hz=>{const l=all.filter(x=>x.hz===hz),z=dmStats(l);return`<div class="dmc"><h4>${DM_HZ[hz].n}</h4>${dmStar(z.stars)} <b>${z.stars==null?"—":f(z.stars,1)+"/5"}</b><div style="font-size:12.5px;color:var(--mut);margin-top:4px">${l.length} lệnh · ${l.filter(x=>x.cl).length} đã đóng${z.n?` · thắng ${f(z.wr*100,0)}% · TB ${dmP(z.avg)}`:""}</div></div>`}).join("");
@@ -904,7 +906,7 @@ B.innerHTML=`<div class="dm"><div class="dmk"><div><small>Đã đầu tư (ảo)
 <div class="note">Chỉ mô phỏng giao dịch bằng tiền ảo, chưa tính phí, thuế, trượt giá và quy tắc T+2 (mã mua hôm nay chỉ bán được từ chiều T+2). Vào lệnh khi mở trang: nếu bạn mở trang sau 10:00 thì lệnh vào ở giá lúc đó; các ngày không mở trang sẽ không có lệnh. Kết quả quá khứ không đảm bảo tương lai; không phải lời khuyên đầu tư.</div></div>`;
 }
 
-function dmTick(){dmLoad();if(!DEMO){if(dmCanStart()){DEMO={start:Date.now(),vd:0,e:[],f:{},days:[],sim:{},real:Object.keys(RD).length>0};if(!dmEnter("Tự động khởi tạo"))DEMO=null;else dmSave()}if(!DEMO)return}const v=dmVN();dmEval();if(v.wd>=1&&v.wd<=5&&v.m>=600&&v.m<900&&!DEMO.days.includes(v.ds)&&(Object.keys(RD).length>0||!DEMO.real)){if(Object.keys(RD).length||!DEMO.real){dmEnter(v.m>615?"Vào muộn lúc "+String(Math.floor(v.m/60)).padStart(2,"0")+":"+String(v.m%60).padStart(2,"0"):"")}}if(document.documentElement.dataset.page==="pf"&&PFT==="d"&&!(document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName)))dmRender()}
+function dmTick(){dmLoad();if(!DEMO){if(dmCanStart()){DEMO={v:2,start:Date.now(),vd:0,e:[],f:{},days:[],sim:{},real:Object.keys(RD).length>0};if(!dmEnter("Tự động khởi tạo"))DEMO=null;else dmSave()}if(!DEMO)return}const v=dmVN();dmEval();if(v.wd>=1&&v.wd<=5&&v.m>=600&&v.m<900&&!DEMO.days.includes(v.ds)&&dmCanStart()){{dmEnter(v.m>615?"Vào muộn lúc "+String(Math.floor(v.m/60)).padStart(2,"0")+":"+String(v.m%60).padStart(2,"0"):"")}}if(document.documentElement.dataset.page==="pf"&&PFT==="d"&&!(document.activeElement&&/INPUT|SELECT/.test(document.activeElement.tagName)))dmRender()}
 function pfTab(t){PFT=t==="d"?"d":"p";document.querySelectorAll("#pftabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===PFT));$("pfB").style.display=PFT==="p"?"":"none";$("demoB").style.display=PFT==="d"?"":"none";if(PFT==="d")dmRender()}
 $("pftabs").onclick=e=>{const b=e.target.closest("button");if(b)pfTab(b.dataset.t)};
 setInterval(dmTick,30000);setTimeout(dmTick,3000);setTimeout(dmTick,15000);
@@ -916,8 +918,8 @@ var STS=null,STR=null;const s5=v=>`<span class="s5">${"★".repeat(Math.floor(v)
 async function rateCompute(fresh){if(fresh&&SERVER&&!DIRECT){try{STS=(await api("/api/status")).tests}catch(e){}}
 const R=[],add=(n,s,t,plan)=>R.push({n,s:cl(Math.round(s*2)/2,0,5),t,plan});let dm=null;try{dmLoad();dm=DEMO}catch(e){}
 const nr=Object.keys(RD).length,tot=UNI.length,mq=Object.values(MK).filter(m=>m.real).length,nl=Object.keys(LIST).length;
-const blocks=[["Giá hiện tại",mq>0],["Lịch sử giá ≥80% mã theo dõi",nr>=tot*.8],["VN-Index thật",!!RIDX],["Danh sách toàn bộ mã niêm yết",nl>100],["Chỉ số P/E, ROE",!!(STS&&/^OK/.test(STS["VNDIRECT (P/E, ROE)"]||""))],["Tin tức",NEWS&&NEWS.length>0],["Dòng tiền quỹ / cổ tức (hiện là DỮ LIỆU MẪU)",false]];
-const bo=blocks.filter(b=>b[1]).length;add("Dữ liệu thật",bo/blocks.length*5,`${bo}/${blocks.length} khối dữ liệu là thật${blocks.filter(b=>!b[1]).length?" · thiếu: "+blocks.filter(b=>!b[1]).map(b=>b[0]).join("; "):""}`,"Cần chạy qua máy chủ (Render/gói Full) và có nguồn thật cho quỹ/cổ tức (hiện chưa có nguồn công khai)");
+const blocks=[["Giá hiện tại",mq>0],["Lịch sử giá ≥80% mã theo dõi",nr>=tot*.8],["VN-Index thật",!!RIDX],["Danh sách toàn bộ mã niêm yết",nl>100],["Chỉ số P/E, ROE",!!(STS&&/^OK/.test(STS["VNDIRECT (P/E, ROE)"]||""))],["Tin tức",NEWS&&NEWS.length>0],["Dòng tiền thị trường (giá trị khớp lệnh theo bảng giá thật)",nl>100],["Lịch cổ tức / cổ phiếu thưởng (VNDIRECT)",!!(DIVR&&DIVR.length)],["Danh mục quỹ nắm giữ (chưa có nguồn công khai ổn định – đã ẩn, không dùng số mẫu)",false]];
+const bo=blocks.filter(b=>b[1]).length;add("Dữ liệu thật",bo/blocks.length*5,`${bo}/${blocks.length} khối dữ liệu là thật${blocks.filter(b=>!b[1]).length?" · thiếu: "+blocks.filter(b=>!b[1]).map(b=>b[0]).join("; "):""}`,"Cần chạy qua máy chủ (Render/gói Full); danh mục các quỹ lớn chưa có nguồn công khai ổn định nên không hiển thị");
 const layers=[["~16 chỉ báo kỹ thuật + mẫu hình nến",true],["Pivot / Fibonacci / SMA200",true],["Chấm điểm 4 khung (T+ / ngắn / trung / dài)",true],["Quản trị vốn theo % rủi ro",true],["Phân tích danh mục + mã thay thế",true],["Luân chuyển dòng tiền ngành",true],["Độ rộng toàn thị trường",nl>100],["Kiểm định lịch sử từng mã",nr>0],["Đầu tư demo tự học",!!dm]];const lo=layers.filter(l=>l[1]).length;
 add("Khả năng phân tích",lo/layers.length*5,`${lo}/${layers.length} lớp phân tích hoạt động`+(layers.some(l=>!l[1])?" · chưa chạy: "+layers.filter(l=>!l[1]).map(l=>l[0]).join("; "):""),"Chạy qua máy chủ để bật các lớp cần dữ liệu thật");
 let dif=[],ok=0;VN30.forEach(sy=>{const m=MK[sy],r=RD[sy];if(m&&m.real&&m.p&&r&&r.c.length){const l=r.c[r.c.length-1].c,d=Math.abs(m.p/l-1);dif.push(d);if(d<=.01)ok++}});
@@ -929,12 +931,12 @@ const avg=n?pn.reduce((a,b)=>a+b,0)/n:null,wr=n?pn.filter(z=>z>0).length/n:null,
 const lowN=n<30?` · mới ${n} lệnh – chưa đủ mẫu (cần ≥ 30)`:"";
 add("Mức áp dụng so với thực tế",avg==null?0:cl(1+(avg+1)/1.5*4,0,5)*(n<10?.6:1),avg==null?"Chưa có lệnh demo nào đủ 1 ngày":`Lãi TB ${f(avg,2)}%/lệnh trên ${n} lệnh demo${lowN}`,"5★ khi lãi TB ≥ +0,5%/lệnh với ≥ 30 lệnh demo");
 add("Tỷ lệ thành công thực tế",wr==null?0:cl(wr/.6*5,0,5)*(n<10?.6:1),wr==null?"Chưa có dữ liệu":`${f(wr*100,0)}% lệnh có lãi (${pn.filter(z=>z>0).length}/${n})${lowN}`,"5★ khi tỷ lệ lãi ≥ 60% với ≥ 30 lệnh");
-let emp=[];try{swingCalc().res.forEach(e=>{if(e.emp!=null&&e.t>=8)emp.push(e.emp)})}catch(e){}const em=emp.length?emp.reduce((a,b)=>a+b,0)/emp.length:null;
-add("Khả năng dự báo",em==null?0:cl(em/.6*5,0,5)*.8,em==null?"Chưa có kiểm định lịch sử":`Kiểm định lịch sử ${emp.length} mã: tín hiệu T+ chạm mục tiêu trước cắt lỗ ${f(em*100,0)}% (trừ 20% vì kiểm định chưa tính phí/trượt giá)`,"Cần đủ lệnh demo thật để so sánh dự báo với kết quả, ≥ 60% thắng");
+let PW=0,PT=0,PM=0;try{swingCalc().res.forEach(e=>{if(e.t>0){PW+=e.w;PT+=e.t;PM++}})}catch(e){}const em=PT>=30?PW/PT:null;
+add("Khả năng dự báo",em==null?0:cl(em/.6*5,0,5)*(PT>=300?1:.8),em==null?"Chưa có kiểm định lịch sử":`Kiểm định lịch sử gộp ${PT} tín hiệu T+ trên ${PM} mã (nến thật từ nguồn kết nối): chạm mục tiêu trước cắt lỗ ${f(em*100,0)}%${PT>=300?"":" · mẫu < 300 tín hiệu nên bị trừ 20%"}; chưa tính phí/trượt giá`,"5★ khi tỷ lệ chạm mục tiêu ≥ 60% trên ≥ 300 tín hiệu; càng nhiều mã/nến quét (máy chủ nạp tối đa ~10 năm) càng tin cậy");
 add("Lợi nhuận thực tế (demo)",n?(ls?cl(g/ls/2*5,0,5):(g?5:2.5))*(n<10?.6:1):0,n?`Tổng lãi/lỗ demo ${f(pn.reduce((a,b)=>a+b,0),1)}% cộng dồn · hệ số lãi/lỗ ${ls?f(g/ls,2):"∞"}${lowN}`:"Chưa có dữ liệu","5★ khi hệ số lãi/lỗ ≥ 2 với ≥ 30 lệnh");
 const nf=dm&&dm.f?Object.values(dm.f).filter(z=>z.n>=3).length:0,ds=dm?dm.days.length:0;
 add("Khả năng tự học",dm?Math.min(5,1+Math.min(2,ds/10)+Math.min(2,nf/6)):0,dm?`Demo tự động ${ds} ngày · ${nf} yếu tố tín hiệu đã có ≥ 3 lệnh để học · ${all.length} lệnh`:"Demo tự học chưa chạy","Cần ≥ 10 ngày dữ liệu và ≥ 6 yếu tố có đủ mẫu; học tự động chỉ chạy khi trang mở");
-let sane=0,tn=0;["t","s","m","l"].forEach(h=>{try{dmCands(h).forEach(c=>{tn++;if(c.px&&c.stop<c.px&&c.tg>c.px&&c.win>=40&&c.win<=82&&c.sc>=0&&c.sc<=100&&isFinite(c.tg)&&isFinite(c.stop))sane++})}catch(e){}});
+let sane=0,tn=0;["t","s","m","l"].forEach(h=>{try{dmCands(h).forEach(c=>{tn++;if(c.px&&c.stop<c.px&&c.tg>c.px&&c.win>=35&&c.win<=90&&c.sc>=0&&c.sc<=100&&isFinite(c.tg)&&isFinite(c.stop))sane++})}catch(e){}});
 add("Độ logic & thông minh",tn?sane/tn*5:0,tn?`${sane}/${tn} khuyến nghị đạt kiểm tra logic (cắt lỗ < giá < mục tiêu, điểm và tỷ lệ thắng trong giới hạn)`:"Chưa có khuyến nghị để kiểm tra","Giữ 100% khuyến nghị qua kiểm tra logic");
 const ago=lastOk?(Date.now()-lastOk)/1000:null;add("Khả năng cập nhật & kết nối",SERVER?(ago!=null&&ago<120?5:ago!=null&&ago<900?3.5:2.5):1,SERVER?`Máy chủ kết nối · cập nhật giá ${ago!=null?Math.round(ago)+" giây trước":"chưa có"} · tự làm mới giá 2–4 giây, quét lịch sử 20 giây`:"Bản web: không có máy chủ, dữ liệu không tự cập nhật","Chạy 24/7 trên máy chủ để dữ liệu luôn mới (Render gói miễn phí tự ngủ khi không có người truy cập)");
 const avgS=R.reduce((a,x)=>a+x.s,0)/R.length,fin=Math.round(avgS*2)/2;
@@ -948,6 +950,12 @@ $("starbody").innerHTML=`<div class="sth">${s5(r.fin)} ${f(r.fin,1)}/5</div><div
 <div class="note">Mục tiêu chấm bằng số liệu thật của trang, không tự cho điểm. Tiêu chí dựa trên lệnh demo (áp dụng, tỷ lệ thành công, lợi nhuận, dự báo) chỉ đáng tin khi có ≥ 30 lệnh; ít hơn thì bị trừ điểm. Một số tiêu chí là tự đánh giá cấu hình, không phải kết quả đầu tư. Không phải lời khuyên đầu tư.</div>`}
 $("starbtn").onclick=starOpen;$("starx").onclick=()=>{$("starmd").style.display="none"};$("starmd").onclick=e=>{if(e.target.id==="starmd")$("starmd").style.display="none"};
 setTimeout(()=>rateCompute(false),2500);setTimeout(()=>rateCompute(false),16000);setInterval(()=>rateCompute(false),600000);
+
+function dividendRows(){const rows=(DIVR||[]).filter(d=>/^\d{4}-\d\d-\d\d$/.test(d.ex)),fd=x=>x.slice(8)+"/"+x.slice(5,7)+"/"+x.slice(0,4),prev=x=>{let t=new Date(x+"T00:00:00Z");do t=new Date(t-864e5);while(t.getUTCDay()===0||t.getUTCDay()===6);return t.toISOString().slice(0,10)},td=new Date(Date.now()+7*36e5).toISOString().slice(0,10);
+const pr=rows.filter(d=>!LIST||!Object.keys(LIST).length||LIST[d.s]).slice(0,40);
+return pr.map(d=>{const bd=prev(d.ex),n=Math.ceil((new Date(d.ex+"T00:00:00Z")-new Date(td+"T00:00:00Z"))/864e5);return `<tr data-s="${d.s}"><td class="l sym">${d.s}</td><td>${fd(bd)}<br><small style="color:var(--mut)">${n>1?"còn "+(n-1)+" ngày":n===1?"hôm nay":"đã qua"}</small></td><td>${fd(d.ex)}</td><td>${d.desc}: ${d.note||""}${d.pay?"<br><small style='color:var(--mut)'>thanh toán "+fd(d.pay)+"</small>":""}</td></tr>`}).join("")||`<tr><td class="l" colspan="4">Không có sự kiện sắp tới.</td></tr>`}
+async function dividendLoad(){try{if(SERVER&&!DIRECT){const j=await api("/api/dividends");DIVR=j.rows}else{const d=new Date(Date.now()+7*36e5-864e5).toISOString().slice(0,10);let all=[];for(const t of["DIVIDEND","STOCKDIV","KINDDIV"]){const r=await fetch("https://api-finfo.vndirect.com.vn/v4/events?q="+encodeURIComponent("type:"+t+"~locale:VN~effectiveDate:gte:"+d)+"&size=80&sort=effectiveDate:asc");const j=await r.json();all=all.concat((j.data||[]).map(e=>({s:e.code,t,desc:e.typeDesc,note:e.note,ex:e.effectiveDate,pay:e.expiredDate||e.actualDate||""})))}if(!all.length)throw 0;all.sort((a,b)=>a.ex<b.ex?-1:1);DIVR=all}DIVERR=""}catch(e){if(!DIVR)DIVERR="Chưa kết nối được lịch cổ tức thật (cần chạy qua máy chủ Render/gói Full). Không hiển thị số mẫu."}try{liveTables()}catch(e){}}
+setTimeout(dividendLoad,2000);setInterval(dividendLoad,3*3600*1000);
 </script>
 </body>
 </html>

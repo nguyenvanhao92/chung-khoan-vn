@@ -98,6 +98,32 @@ def board():
     return cached("board", 3, go)
 
 
+FINFO_EVENTS = "https://api-finfo.vndirect.com.vn/v4/events"
+
+
+def dividends():
+    """Lich co tuc / co phieu thuong that tu VNDIRECT finfo (effectiveDate = ngay GDKHQ, expiredDate = ngay thanh toan)."""
+    def go():
+        today = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600 - 86400))
+        out = []
+        for typ in ("DIVIDEND", "STOCKDIV", "KINDDIV"):
+            try:
+                q = "type:%s~locale:VN~effectiveDate:gte:%s" % (typ, today)
+                j = fetch_json(FINFO_EVENTS + "?" + urllib.parse.urlencode({"q": q, "size": 80, "sort": "effectiveDate:asc"}, safe=":~"), 12)
+                for e in j.get("data", []):
+                    if not e.get("code") or not e.get("effectiveDate"):
+                        continue
+                    out.append({"s": e["code"], "t": typ, "desc": e.get("typeDesc", ""), "note": e.get("note", ""), "ex": e["effectiveDate"],
+                                "pay": e.get("expiredDate") or e.get("actualDate") or "", "div": e.get("dividend"), "ratio": e.get("ratio")})
+            except Exception as ex:
+                print("co tuc %s loi: %s" % (typ, ex), file=sys.stderr)
+        if not out:
+            raise RuntimeError("khong lay duoc lich co tuc")
+        out.sort(key=lambda x: x["ex"])
+        return out
+    return cached("divs", 3 * 3600, go)
+
+
 _pref = {"busy": False, "fail": {}}
 
 
@@ -429,12 +455,15 @@ class H(BaseHTTPRequestHandler):
                 return send(self, 200, {"ok": True, "server": "vn-stock-analyzer"})
             if u.path == "/api/status":
                 return send(self, 200, {"ok": True, "fireant_token": bool(fireant_token()), "tests": self_test()})
+            if u.path == "/api/dividends":
+                d = dividends()
+                return send(self, 200, {"ok": True, "n": len(d), "rows": d, "source": "VNDIRECT finfo"})
             if u.path == "/api/symbols":
                 bd = board()
                 rows = [[k, v.get("ex", ""), v["p"], v["ref"], v["vol"], v["h"], v["lo"]] for k, v in bd.items() if k.isalnum() and len(k) <= 5]
                 return send(self, 200, {"ok": True, "n": len(rows), "time": max([v.get("time", "") for v in bd.values()] or [""]), "rows": rows})
             if u.path == "/api/scan":
-                syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:80]
+                syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:150]
                 scan_start(syms)
                 return send(self, 200, scan_payload(syms))
             if u.path == "/api/news":
