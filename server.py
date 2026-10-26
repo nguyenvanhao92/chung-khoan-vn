@@ -2,7 +2,7 @@
 """VN Stock Analyzer - may chu cuc bo lay gia that. Chi dung thu vien chuan cua Python 3.8+.
 Chay:  python server.py   roi mo  http://localhost:8000
 """
-import json, os, sys, time, threading, webbrowser, urllib.request, urllib.parse, base64, hmac
+import re, xml.etree.ElementTree as ET, email.utils, json, os, sys, time, threading, webbrowser, urllib.request, urllib.parse, base64, hmac
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone, timedelta
 
@@ -76,7 +76,7 @@ def board():
     v=cao nhat, w=thap nhat, n=tong khoi luong, Time=gio cap nhat; so lenh 3 buoc: mua (e,f)(g,h)(i,j), ban (s,t)(q,r)(o,p), m=KL khop gan nhat. Gia tinh bang nghin dong."""
     def go():
         out = {}
-        for center in (1, 2):
+        for center in (1, 2, 9):  # 1=HOSE, 2=HNX, 9=UPCoM (UPCoM chua kiem tra; loi thi bo qua)
             try:
                 for e in fetch_json(BOARD % center, 10):
                     sym, b = e.get("a"), e.get("b") or 0
@@ -85,7 +85,7 @@ def board():
                     last = e.get("l") or 0
                     if not last:
                         last = b + (e.get("k") or 0) if e.get("k") else b
-                    out[sym] = {"ref": float(b), "p": float(last), "h": float(e.get("v") or last), "lo": float(e.get("w") or last),
+                    out[sym] = {"ex": {1: "HOSE", 2: "HNX", 9: "UPCoM"}[center], "ref": float(b), "p": float(last), "h": float(e.get("v") or last), "lo": float(e.get("w") or last),
                                 "vol": int(e.get("totalvolume") or e.get("n") or 0), "time": e.get("Time", ""),
                                 "bid": [[float(e.get(a) or 0), int(e.get(b2) or 0)] for a, b2 in (("e", "f"), ("g", "h"), ("i", "j"))],
                                 "ask": [[float(e.get(a) or 0), int(e.get(b2) or 0)] for a, b2 in (("s", "t"), ("q", "r"), ("o", "p"))],
@@ -319,6 +319,67 @@ def scan_payload(syms):
             "index": [round(x["c"], 2) for x in idx]}
 
 
+NEWS_FEEDS = [("VnEconomy", "https://vneconomy.vn/chung-khoan.rss"), ("VnEconomy", "https://vneconomy.vn/nhip-cau-doanh-nghiep.rss"),
+              ("VnEconomy", "https://vneconomy.vn/tai-chinh.rss")]
+# Them nguon RSS khac: dat bien moi truong TIN_RSS, vi du:  TIN_RSS="TNCK|https://.../chung-khoan.rss,CafeF|https://.../x.rss"
+for _x in (os.environ.get("TIN_RSS") or "").split(","):
+    if "|" in _x:
+        _n, _u = _x.split("|", 1)
+        if _u.strip().startswith("https://"):
+            NEWS_FEEDS.append((_n.strip() or "RSS", _u.strip()))
+POS = ["tăng mạnh", "tăng trần", "bứt phá", "khởi sắc", "lãi kỷ lục", "lợi nhuận tăng", "tăng trưởng", "mua ròng", "vượt kế hoạch",
+       "cổ tức", "kỷ lục", "hồi phục", "tích cực", "nâng", "lãi"]
+NEG = ["giảm sâu", "giảm mạnh", "giảm sàn", "bán tháo", "bán ròng", "lỗ", "sụt giảm", "thua lỗ", "vi phạm", "bị phạt", "đình chỉ",
+       "cảnh báo", "tiêu cực", "hạ", "rủi ro", "nợ xấu", "thanh tra", "khởi tố"]
+
+
+def news_sentiment(text):
+    t = text.lower()
+    sc = sum(1 for w in POS if w in t) - sum(1 for w in NEG if w in t)
+    return 1 if sc > 0 else -1 if sc < 0 else 0
+
+
+def fetch_text(url, timeout=10):
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def load_news():
+    items, seen = [], set()
+    for src, url in NEWS_FEEDS:
+        try:
+            root = ET.fromstring(fetch_text(url))
+        except Exception as e:
+            print("tin tuc loi", url, e, file=sys.stderr)
+            continue
+        for it in root.iter("item"):
+            title = (it.findtext("title") or "").strip()
+            link = (it.findtext("link") or "").strip()
+            if not title or link in seen:
+                continue
+            seen.add(link)
+            desc = re.sub(r"<[^>]+>", " ", it.findtext("description") or "")
+            try:
+                ts = int(email.utils.parsedate_to_datetime(it.findtext("pubDate")).timestamp())
+            except Exception:
+                ts = 0
+            items.append({"title": title, "link": link, "t": ts, "src": src, "desc": desc.strip()[:240]})
+    items.sort(key=lambda x: -x["t"])
+    return items[:60]
+
+
+def news_payload(syms):
+    ss = set(syms)
+    out = []
+    for it in cached("news", 300, load_news):
+        txt = it["title"] + " " + it["desc"]
+        tags = sorted({m for m in re.findall(r"\b[A-Z][A-Z0-9]{2}\b", txt) if m in ss})
+        out.append({"title": it["title"], "link": it["link"], "t": it["t"], "src": it["src"], "syms": tags,
+                    "sent": news_sentiment(txt)})
+    return {"ok": True, "items": out[:40]}
+
+
 def send(h, code, obj):
     body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
     h.send_response(code)
@@ -368,10 +429,17 @@ class H(BaseHTTPRequestHandler):
                 return send(self, 200, {"ok": True, "server": "vn-stock-analyzer"})
             if u.path == "/api/status":
                 return send(self, 200, {"ok": True, "fireant_token": bool(fireant_token()), "tests": self_test()})
+            if u.path == "/api/symbols":
+                bd = board()
+                rows = [[k, v.get("ex", ""), v["p"], v["ref"], v["vol"], v["h"], v["lo"]] for k, v in bd.items() if k.isalnum() and len(k) <= 5]
+                return send(self, 200, {"ok": True, "n": len(rows), "time": max([v.get("time", "") for v in bd.values()] or [""]), "rows": rows})
             if u.path == "/api/scan":
                 syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:80]
                 scan_start(syms)
                 return send(self, 200, scan_payload(syms))
+            if u.path == "/api/news":
+                syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:120]
+                return send(self, 200, news_payload(syms))
             if u.path == "/api/ratios":
                 if not sym.isalnum() or len(sym) > 5:
                     return send(self, 400, {"ok": False, "error": "ma khong hop le"})
