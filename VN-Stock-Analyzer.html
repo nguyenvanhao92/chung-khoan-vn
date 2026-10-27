@@ -161,6 +161,14 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 .ovl .ovlb{flex:0 0 100%;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);margin:2px 0 0}.ovl .ovlb2{margin-top:6px}
 .sigbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:6px 0 4px;font-size:13px}.sigbar:empty{display:none}.sgb{color:#fff;font-weight:800;padding:5px 12px;border-radius:8px;letter-spacing:.3px}.sgt{color:var(--ink)}.sgw{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--mut)}.sgw i{font-style:normal;font-weight:600}
 .hrow{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+#cnb{border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-weight:800;font-size:13px;padding:7px 14px;border-radius:99px;cursor:pointer}#cnb:hover{background:rgba(255,255,255,.26)}
+#cnm{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;display:none;align-items:center;justify-content:center;padding:16px}#cnm.on{display:flex}
+#cnm .bx{background:var(--card,#fff);color:var(--ink,#0f172a);border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:18px 18px 14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#cnm h3{margin:0 0 4px;font-size:18px;color:inherit}#cnm .sub{font-size:12px;opacity:.7;margin-bottom:10px}
+#cnm .cr{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(128,128,128,.25)}#cnm .cr b{display:block;font-size:14px}#cnm .cr small{display:block;font-size:12px;opacity:.75;word-break:break-word}
+#cnm .dot{flex:0 0 12px;height:12px;border-radius:50%;margin-top:4px;background:#94a3b8}#cnm .dot.ok{background:#16a34a}#cnm .dot.bad{background:#dc2626}#cnm .dot.wait{background:#f59e0b;animation:cnp 1s infinite}@keyframes cnp{50%{opacity:.3}}
+#cnm .ms{margin-left:auto;font-size:12px;font-weight:700;white-space:nowrap;opacity:.8}
+#cnm .ft{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}#cnm .ft button{border:0;border-radius:99px;padding:8px 16px;font-weight:700;cursor:pointer;background:#2563eb;color:#fff}#cnm .ft button.g{background:rgba(128,128,128,.25);color:inherit}
 #rfb{position:relative;overflow:hidden;min-width:138px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-weight:800;font-size:13px;padding:7px 14px;border-radius:99px;cursor:pointer}
 #rfb .rfp{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .25s}
 #rfb .rft{position:relative;z-index:1}#rfb.busy{cursor:progress}#rfb:hover{background:rgba(255,255,255,.26)}
@@ -171,7 +179,7 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 <header><div class="wrap">
 <div><h1>📈 VN Stock Analyzer</h1><small>Phân tích chứng khoán Việt Nam chuyên nghiệp</small></div>
 <button id="starbtn" title="Tự đánh giá sao"><span class="sbs"><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i></span></button>
-<div class="hr"><span class="live"><i></i><span id="clock">--:--:--</span> · <span id="mkt">HOSE / HNX</span> · <b id="mode">mô phỏng</b></span><div class="hrow"><button id="rfb" type="button" title="Làm mới toàn bộ dữ liệu của trang"><i class="rfp"></i><span class="rft">🔄 Làm mới</span></button><span class="thm" id="thm"><button data-th="light">☀️ Sáng</button><button data-th="dark">🌙 Tối</button></span></div></div>
+<div class="hr"><span class="live"><i></i><span id="clock">--:--:--</span> · <span id="mkt">HOSE / HNX</span> · <b id="mode">mô phỏng</b></span><div class="hrow"><button id="rfb" type="button" title="Làm mới toàn bộ dữ liệu của trang"><i class="rfp"></i><span class="rft">🔄 Làm mới</span></button><button id="cnb" type="button" title="Xem và kiểm tra các nguồn dữ liệu đang kết nối">🔌 Kết Nối</button><span class="thm" id="thm"><button data-th="light">☀️ Sáng</button><button data-th="dark">🌙 Tối</button></span></div></div>
 </div></header>
 <nav class="pgtabs" id="pgtabs"><button data-p="home" class="on">Trang chủ phân tích</button><button data-p="pf">Danh Mục Đầu Tư</button></nav>
 
@@ -264,7 +272,7 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 <canvas id="flow"></canvas>
 <div class="legend"><span><i style="background:var(--up)"></i>Dòng tiền vào (3 phiên gần nhất)</span><span><i style="background:var(--dn)"></i>Dòng tiền ra</span><span><b>|</b> Mức trung bình 7 phiên trước (quy đổi 3 phiên)</span></div>
 <div class="tb"><table><thead><tr><th class="l">Ngành</th><th>Dòng tiền 3 phiên</th><th>So 7 phiên trước</th><th>Xu hướng</th><th class="l">Mã tiêu biểu</th></tr></thead><tbody id="rottb"></tbody></table></div>
-<div class="note"><b id="flownote"></b> ⚠ Khi chạy cùng máy chủ giá thật, dòng tiền ngành được ước tính từ giá × khối lượng thật của các mã tiêu biểu (không phải dòng tiền ròng chính thức); khi không có máy chủ là dữ liệu mô phỏng. Xu hướng luân chuyển được suy ra từ chênh lệch giữa 3 phiên gần nhất và 7 phiên trước đó, chỉ mang tính tham khảo, không phải lời khuyên đầu tư. Bấm vào mã để phân tích.</div></section>
+<div class="note"><b id="flownote"></b> ⚠ Khi chạy cùng máy chủ giá thật, dòng tiền ngành được ước tính từ giá × khối lượng thật của các mã tiêu biểu (không phải dòng tiền ròng chính thức); khi không có máy chủ là dữ liệu mô phỏng. Giá trị là tổng của các mã tiêu biểu (ngành có 4 mã sẽ lớn hơn ngành có 3 mã); chiều mua/bán lấy theo giá đóng so với phiên trước, phiên hôm nay đang diễn ra được nội suy theo giờ giao dịch. Xu hướng luân chuyển được suy ra từ chênh lệch giữa 3 phiên gần nhất và 7 phiên trước đó, chỉ mang tính tham khảo, không phải lời khuyên đầu tư. Bấm vào mã để phân tích.</div></section>
 <section class="card c12" id="newssec"><h2>Tin Tức Thị Trường</h2><div id="newshead" class="lead"></div><div id="newslist"></div><div class="note" id="newsnote"></div></section>
 <section class="card c12" id="pfsec"><nav class="pgtabs" id="pftabs" style="padding:0;margin:0 0 12px"><button data-t="p" class="on">Danh mục của tôi</button><button data-t="d">🤖 Đầu tư demo tự học</button></nav><div id="pfB" class="pgrid"></div><div id="demoB" style="display:none"></div><div id="pfX"><h2 style="font-size:13.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:26px 0 10px;border-left:3px solid var(--acc);padding-left:8px">📰 Tin Tức &amp; Sự Kiện</h2><div id="newsB"></div><h2 style="font-size:13.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:26px 0 10px;border-left:3px solid var(--acc);padding-left:8px">🧠 AI Phân Tích</h2><div id="aiB"></div></div><div id="pfD" style="margin-top:26px"></div></section>
 </main>
@@ -274,6 +282,7 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 <footer>Make By Nguyễn Văn Hào OCP<div style="margin-top:6px;font-weight:600">Phone : +84-788.333.318</div><em>© VN Stock Analyzer</em></footer>
 
 <div id="starmd" style="display:none"><div class="stbox"><button id="starx" aria-label="Đóng">✕</button><div id="starbody"></div></div></div>
+<div id="cnm" role="dialog" aria-modal="true"><div class="bx"><h3>🔌 Kết nối nguồn dữ liệu</h3><div class="sub" id="cns"></div><div id="cnl"></div><div class="ft"><button class="g" id="cnc">Đóng</button><button id="cnr">Kiểm tra lại</button></div></div></div>
 <script>
 const DB={VCB:["Vietcombank",55.8],FPT:["FPT Corp",57.4],HPG:["Hòa Phát",21.1],VNM:["Vinamilk",57.7],VIC:["Vingroup",207],VHM:["Vinhomes",57.8],MWG:["Thế Giới Di Động",74.2],SSI:["Chứng khoán SSI",19.95],TCB:["Techcombank",33.95],ACB:["ACB",20.25],MBB:["MB Bank",19.65],VPB:["VPBank",19],GAS:["PV Gas",76.4],MSN:["Masan",64],STB:["Sacombank",36],EIB:["Eximbank",16.3],BCM:["Becamex IDC",40.9],BVH:["Bảo Việt",69.7],GVR:["Tập đoàn Cao su VN",31.8],HDB:["HDBank",22.1],BID:["BIDV",33.65],CTG:["VietinBank",30.45],VND:["VNDirect",19],VRE:["Vincom Retail",30]};
 const VERIFIED=new Set(["ACB","BCM","BID","BVH","CTG","GVR","HDB","EIB","VCB","FPT","HPG","VNM","VHM","MWG","SSI","TCB","MBB","GAS"]);
@@ -834,14 +843,15 @@ const px=cx+x.prev*k;g.strokeStyle=ink;g.lineWidth=2;g.beginPath();g.moveTo(px,y
 function flowText(){
 const a=flowStats(),md=Math.max(...a.map(x=>Math.abs(x.d)))||1,byD=a.slice().sort((x,y)=>y.d-x.d);
 const dest=byD.filter(x=>x.cur>0&&x.d>md*.15).slice(0,3),src=byD.slice().reverse().filter(x=>x.d<-md*.15).slice(0,3),nm=x=>esc(x.s.n),chips=t=>t.map(c=>`<span class="tkc" data-s="${c}">${c}</span>`).join("");
-$("rotbox").innerHTML=`<div><small>Dòng tiền đang rút khỏi</small><b class="dn">${src.length?src.map(nm).join(" · "):"Chưa rõ"}</b></div><div class="ra">➜</div><div><small>Dự kiến chảy vào</small><b class="up">${dest.length?dest.map(nm).join(" · "):"Chưa rõ"}</b></div>`;
+const RB=`<div><small>Dòng tiền đang rút khỏi</small><b class="dn">${src.length?src.map(nm).join(" · "):"Chưa rõ"}</b></div><div class="ra">➜</div><div><small>Dự kiến chảy vào</small><b class="up">${dest.length?dest.map(nm).join(" · "):"Chưa rõ"}</b></div>`;if($("rotbox").dataset.h!==RB){$("rotbox").dataset.h=RB;$("rotbox").innerHTML=RB}
 if(dest[0]){const d0=dest[0],pr=cl(Math.round(52+d0.d/md*34),52,90);
-$("lead").innerHTML=`<b>Xu hướng sắp tới:</b> dòng tiền nhiều khả năng tiếp tục luân chuyển sang ngành <b>${nm(d0)}</b> (xác suất ~${pr}%). 3 phiên gần nhất ngành này hút ròng <b>${f(d0.cur,0)} tỷ</b>, tăng <b>${f(d0.d,0)} tỷ</b> so với mức 7 phiên trước.${dest[1]?` Tiếp theo là <b>${nm(dest[1])}</b>${dest[2]?" và <b>"+nm(dest[2])+"</b>":""}.`:""} Mã tiêu biểu: ${chips(d0.s.t)}`}
+$("lead").innerHTML=`<b>Xu hướng sắp tới:</b> dòng tiền nhiều khả năng tiếp tục luân chuyển sang ngành <b>${nm(d0)}</b> (mức tín hiệu ~${pr}/100, quy đổi từ độ tăng tốc, không phải xác suất thống kê). 3 phiên gần nhất ngành này hút ròng <b>${f(d0.cur,0)} tỷ</b>, tăng <b>${f(d0.d,0)} tỷ</b> so với mức 7 phiên trước.${dest[1]?` Tiếp theo là <b>${nm(dest[1])}</b>${dest[2]?" và <b>"+nm(dest[2])+"</b>":""}.`:""} Mã tiêu biểu: ${chips(d0.s.t)}`}
 else $("lead").innerHTML="Chưa có ngành nào tăng tốc rõ rệt – dòng tiền đang phân tán.";
-$("rottb").innerHTML=byD.map(x=>{const r=x.d/md,lab=r>.25?["Tăng tốc vào","#0f9d58"]:r<-.25?["Rút ra","#e5383b"]:["Ổn định","#d99a00"];
-return `<tr><td class="l"><b>${nm(x)}</b></td><td class="${x.cur>=0?"up":"dn"}">${x.cur>=0?"+":""}${f(x.cur,0)} tỷ</td><td class="${x.d>=0?"up":"dn"}">${x.d>=0?"▲ +":"▼ "}${f(x.d,0)}</td><td><span class="pill" style="background:${lab[1]}">${lab[0]}</span></td><td class="l">${chips(x.s.t)}</td></tr>`}).join("")}
+const TB=byD.map(x=>{const r=x.d/md,lab=r>.25?["Tăng tốc vào","#0f9d58"]:r<-.25?["Rút ra","#e5383b"]:["Ổn định","#d99a00"];
+return `<tr><td class="l"><b>${nm(x)}</b></td><td class="${x.cur>=0?"up":"dn"}">${x.cur>=0?"+":""}${f(x.cur,0)} tỷ</td><td class="${x.d>=0?"up":"dn"}">${x.d>=0?"▲ +":"▼ "}${f(x.d,0)}</td><td><span class="pill" style="background:${lab[1]}">${lab[0]}</span></td><td class="l">${chips(x.s.t)}</td></tr>`}).join("");if($("rottb").dataset.h!==TB){$("rottb").dataset.h=TB;$("rottb").innerHTML=TB}}
 SEC.forEach(s=>s.t.forEach(t=>{if(!MK[t]){ALL.push(t);const c=gen(t).candles;MK[t]={p:c[c.length-1].c,ref:c[c.length-2].c}}}));
-function realFlows(){const R=SEC.map(sc=>{const days=Array(10).fill(0);let ok=0;sc.t.forEach(t=>{const hh=(MK[t]||{}).hist;if(!hh||hh.length<10)return;ok++;hh.forEach((d,i,a)=>{days[10-a.length+i]+=Math.sign(d.c-d.o)*d.v*d.c/1e6})});return ok?days:null});if(R.every(Boolean))SEC.forEach((sc,i)=>{sc.h=R[i];sc.real=1})}
+function dayFrac(){const d=new Date(Date.now()+7*36e5),w=d.getUTCDay(),m=d.getUTCHours()*60+d.getUTCMinutes();if(w===0||w===6||m<540||m>=885)return 1;const e=m<=690?m-540:m<780?150:150+m-780;return Math.min(1,Math.max(.15,e/255))}
+function realFlows(){const fr=dayFrac();const R=SEC.map(sc=>{const days=Array(10).fill(0);let ok=0;sc.t.forEach(t=>{const hh=(MK[t]||{}).hist;if(!hh||hh.length<10)return;ok++;const L=hh.length;hh.forEach((d,i,a)=>{const k=10-L+i;if(k<0)return;const pc=i>0?a[i-1].c:d.o,sg=Math.sign(d.c-pc);let v=d.v;if(i===L-1&&fr<1)v=v/fr;days[k]+=sg*v*d.c/1e6})});return ok?days:null});if(R.every(Boolean))SEC.forEach((sc,i)=>{sc.h=R[i];sc.real=1})}
 function flowTick(){flowDraw();flowText();const n=SEC.filter(s=>s.real).length;if($("flownote"))$("flownote").textContent=n===SEC.length?"Dòng tiền ngành: ước tính từ giá × khối lượng thật 10 phiên gần nhất (không phải dòng tiền ròng chính thức).":"Dòng tiền ngành: DỮ LIỆU MẪU, không cập nhật"+(SERVER&&!DIRECT?" – đang chờ lịch sử giá thật ("+n+"/"+SEC.length+" ngành)":" – chỉ có số thật khi chạy gói có máy chủ")+"."}
 $("rotsec").onclick=e=>{const k=e.target.dataset&&e.target.dataset.s;if(k){load(k);scrollTo({top:0,behavior:"smooth"})}};
 addEventListener("resize",flowDraw);flowTick();setInterval(flowTick,1800);
@@ -900,7 +910,7 @@ const comp=[[.2,u(conf,-.3,.7),`Hội tụ ${B}/${N} chỉ báo Mua`],[.15,vr>=1
 let sc=comp.reduce((a,q)=>a+q[0]*q[1],0)/comp.reduce((a,q)=>a+q[0],0)*100;const pen=[];
 if(nz(bu)&&px>bu){sc-=6;pen.push("Vượt dải Bollinger trên")}const pt=patterns(c);pt.forEach(z=>{if(z[1]<0){sc-=6;pen.push(z[0])}else if(z[1]>0)sc+=3});sc=cl(Math.round(sc),0,100);
 const T1=1.5,T2=2.5,SL=1.3;let w=0,t=0;
-for(let i=60;i<n-6;i++){const a=I.s20[i],b=I.s20[i-3],h=I.macd.h[i],r=I.rsi[i];if(![a,b,h,r].every(nz))continue;if(!(c[i].c>a&&a>b&&h>I.macd.h[i-1]&&r>=45&&r<=72))continue;const e=c[i].c;let res=0;for(let j=i+1;j<=i+5;j++){if(c[j].l<=e-SL*A){res=-1;break}if(c[j].h>=e+T1*A){res=1;break}}t++;if(res===1)w++}
+for(let i=60;i<n-6;i++){const a=I.s20[i],b=I.s20[i-3],h=I.macd.h[i],r=I.rsi[i];if(![a,b,h,r].every(nz))continue;if(!(c[i].c>a&&a>b&&h>I.macd.h[i-1]&&r>=45&&r<=72))continue;const e=c[i].c;let res=0;for(let j=i+1;j<=i+5;j++){if(j===i+1){if(c[j].c<=e-SL*A){res=-1;break}continue}if(c[j].l<=e-SL*A){res=-1;break}if(c[j].h>=e+T1*A){res=1;break}}t++;if(res===1)w++}
 const emp=t>=8?w/t:null,base=38+sc*.5,win=cl(Math.round(emp==null?base:.5*emp*100+.5*base),40,82);
 let stp=Math.max(px-SL*A,Math.min(...c.slice(-3).map(z=>z.l))-.1*A);stp=Math.min(stp,px-.6*A);
 const t1=px+T1*A,t2=Math.min(px+T2*A,px*1.15);
@@ -922,7 +932,7 @@ document.querySelectorAll("#ptabs button").forEach(b=>b.classList.toggle("on",b.
 $("pktb").innerHTML=top.map((t,i)=>{const e=t.e[h],ok=real||VERIFIED.has(t.s),px=(ok?"":"~")+f(t.e.px);
 return `<tr data-s="${t.s}"><td class="l"><span class="rk">${i+1}</span><span class="sym">${t.s}</span> <small style="color:var(--mut)">${rateLb(e.sc)} · ${e.sc}/100</small><span class="why">${e.why.join(" · ")||"Tín hiệu hỗn hợp"}</span></td><td class="l"><span class="sec">${secOf(t.s)}</span></td><td><b>${px}</b></td><td>${f(e.bl)} – ${f(e.bh)}</td><td><b class="up">${f(e.tg)}</b><br><small class="up">+${f(e.up*100,1)}%</small></td><td class="dn">${f(e.stop)}<br><small>−${f((1-e.stop/t.e.px)*100,1)}%</small></td><td>${H.hold}</td><td><span class="pill" style="background:${wc(e.win)}">${e.win}%</span></td></tr>`}).join("")||`<tr><td class="l" colspan="8">Đang tải dữ liệu lịch sử giá…</td></tr>`;
 const b=top[0];$("pklead").innerHTML=b?`<b>${H.n} (${H.hold}):</b> mã dẫn đầu là <b>${b.s}</b> – điểm ${b.e[h].sc}/100, mục tiêu <b class="up">${f(b.e[h].tg)}</b> (+${f(b.e[h].up*100,1)}%), cắt lỗ ${f(b.e[h].stop)}.`:"";
-$("pknote").innerHTML=(real?`✔ Chấm điểm trên lịch sử giá thật ${res.length}/${UNI.length} mã${SCANN?" ("+SCANN+")":""} (VNDIRECT/Entrade/CafeF)${res.some(r=>r.e.l.fund)?", có thêm P/E, P/B, ROE (VNDIRECT)":""}, so sánh sức mạnh với VN-Index thật. `:`⚠ <b>Bản web chưa có máy chủ: lịch sử giá là MÔ PHỎNG, chỉ để minh họa cách chấm điểm.</b> Chạy gói VN-Stock-Analyzer-Full.zip để dùng dữ liệu thật. `)+`Điểm = trung bình có trọng số: ngắn hạn (xu hướng SMA20, MACD, RSI, khối lượng, đột phá, sức mạnh so VN-Index); trung hạn (SMA50/100, động lượng 60 phiên, vượt VN-Index, thanh khoản); dài hạn (SMA200, xu hướng 6 tháng, biến động, ROE, P/E, P/B). Mục tiêu = biên độ biến động × điểm (có giới hạn); cắt lỗ theo biến động. Tỷ lệ thắng là điểm quy đổi, không phải thống kê đã kiểm chứng; không phải lời khuyên đầu tư.`}
+$("pknote").innerHTML=(real?`✔ Chấm điểm trên lịch sử giá thật ${res.length}/${UNI.length} mã${SCANN?" ("+SCANN+")":""} (VNDIRECT/Entrade/CafeF)${res.some(r=>r.e.l.fund)?", có thêm P/E, P/B, ROE (VNDIRECT)":""}, so sánh sức mạnh với VN-Index thật. `:`⚠ <b>Bản web chưa có máy chủ: lịch sử giá là MÔ PHỎNG, chỉ để minh họa cách chấm điểm.</b> Chạy gói VN-Stock-Analyzer-Full.zip để dùng dữ liệu thật. `)+`Điểm = trung bình có trọng số: ngắn hạn (xu hướng SMA20, MACD, RSI, khối lượng, đột phá, sức mạnh so VN-Index); trung hạn (SMA50/100, động lượng 60 phiên, vượt VN-Index, thanh khoản); dài hạn (SMA200, xu hướng 6 tháng, biến động, ROE, P/E, P/B). Mục tiêu = biên độ biến động × điểm (có giới hạn); cắt lỗ theo biến động. Tỷ lệ thắng là điểm quy đổi, không phải thống kê đã kiểm chứng; kiểm chứng lịch sử T+ đã tính theo quy tắc T+2 (không bán được ở phiên kế tiếp); không phải lời khuyên đầu tư.`}
 $("ptabs").onclick=e=>{const h=e.target.closest("button");if(h){PICKH=h.dataset.h;pickRender()}};
 $("picksec").onclick=e=>{const r=e.target.closest("tr[data-s]");if(r){load(r.dataset.s);scrollTo({top:0,behavior:"smooth"})}};
 async function pullScan(){if(!SERVER||DIRECT)return;try{const j=await api("/api/scan?symbols="+UNI.join(","));Object.entries(j.data||{}).forEach(([s,d])=>{if(d.c.length>=60)RD[s]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r,src:d.src,ath:d.ath,athT:d.athT}});if(j.index&&j.index.length>60){let ix=j.index;const it=j.indexT;if(it&&it.length===ix.length){const t=it[it.length-1];if(new Date((t>1e11?t:t*1000)+7*36e5).toISOString().slice(0,10)>dkey())ix=ix.slice(0,-1)}RIDX=ix}SCANN=j.ready+"/"+j.total+" mã"+(j.busy?" – đang nạp thêm":"");SCANU=j.total;SCANOK=!j.busy&&j.total>0&&j.ready>=j.total*.9;pickRender();dayRender()}catch(e){}}
@@ -1185,6 +1195,27 @@ T.push(["bảng xếp hạng",()=>{try{pickRender()}catch(e){}try{dayRender()}ca
 const n=T.length;let done=0;const set=(p,t)=>{bar.style.width=p+"%";tx.textContent=t};set(0,"Đang tải 0%");
 for(const [nm,fn] of T){set(Math.round(done/n*100),"Đang tải "+Math.round(done/n*100)+"%");btn.title="Đang cập nhật: "+nm;try{await tm(fn,20000)}catch(e){}done++;await new Promise(r=>setTimeout(r,120))}
 set(100,"✔ Xong 100%");setTimeout(()=>{bar.style.width="0";tx.textContent="🔄 Làm mới";btn.classList.remove("busy");busy=false},1600)})})();
+
+(function(){const m=$("cnm"),L=$("cnl"),S2=$("cns");if(!m||!$("cnb"))return;let run=0;
+const E=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const row=(st,n,d,ms)=>`<div class="cr"><i class="dot ${st}"></i><div><b>${E(n)}</b><small>${E(d)}</small></div><span class="ms">${ms==null?"":E(ms)}</span></div>`;
+async function check(){const id=++run;L.innerHTML=row("wait","Đang kiểm tra…","Vui lòng chờ vài giây","");
+const h=[];let t0=performance.now();
+if(API!==""||!location.protocol.startsWith("http")){S2.textContent="Bản web không có máy chủ nên không có nguồn dữ liệu thật.";L.innerHTML=row("bad","Máy chủ dữ liệu","Chưa kết nối. Dữ liệu đang là mô phỏng, chạy bản có máy chủ để dùng dữ liệu thật.","");return}
+let ping=false,pms=0;try{const r=await fetch(API+"/api/ping",{cache:"no-store"});const j=await r.json();ping=!!(j&&j.ok);pms=Math.round(performance.now()-t0)}catch(e){}
+if(id!==run)return;
+h.push(row(ping?"ok":"bad","Máy chủ ứng dụng",ping?(DIRECT?"Kết nối trực tiếp từ trình duyệt":"Đang hoạt động"):"Không phản hồi. Máy chủ có thể đang khởi động (gói miễn phí mất 30–60 giây), bấm Kiểm tra lại sau.",ping?pms+" ms":""));
+h.push(row(REAL?"ok":"bad","Dữ liệu trên trang",REAL?("Dữ liệu thật · "+(SRC||"")+(lastOk?" · cập nhật "+new Date(lastOk).toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"}):"")):"Chưa nạp được dữ liệu thật, đang hiện dữ liệu mô phỏng",""));
+if(typeof SCANN!=="undefined"&&SCANN)h.push(row(SCANOK?"ok":"wait","Quét danh sách mã","Đã nạp "+SCANN,""));
+L.innerHTML=h.join("")+row("wait","Các nguồn dữ liệu","Đang kiểm tra từng nguồn…","");S2.textContent="Kiểm tra lúc "+new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});
+if(!ping)return;
+try{const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),35000);const r=await fetch(API+"/api/health",{cache:"no-store",signal:ac.signal});clearTimeout(tm);const j=await r.json();if(id!==run)return;
+if(!j||!j.ok)throw 0;const ok=j.sources.filter(x=>x.ok).length;S2.textContent=`${ok}/${j.sources.length} nguồn kết nối được · kiểm tra lúc `+new Date().toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"});
+L.innerHTML=h.join("")+j.sources.map(x=>row(x.ok?"ok":"bad",x.name,x.role+" — "+(x.ok?x.detail:"Lỗi: "+x.detail),x.ms+" ms")).join("")+(j.scan?row(j.scan.busy?"wait":"ok","Quét lịch sử giá trên máy chủ","Đã nạp "+j.scan.ready+" mã"+(j.scan.busy?" (đang quét)":"")+(j.scan.fail?" · "+j.scan.fail+" mã lỗi tạm thời":""),""):"")}
+catch(e){if(id!==run)return;L.innerHTML=h.join("")+row("bad","Kiểm tra nguồn","Không lấy được kết quả kiểm tra (máy chủ bận hoặc quá thời gian). Bấm Kiểm tra lại.","")}}
+const open=()=>{m.classList.add("on");check()},close=()=>{m.classList.remove("on");run++};
+$("cnb").onclick=open;$("cnc").onclick=close;$("cnr").onclick=check;m.onclick=e=>{if(e.target===m)close()};document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+})();
 </script>
 </body>
 </html>

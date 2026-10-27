@@ -213,7 +213,7 @@ def history(sym, days=420, slow_fallback=True):
     q = urllib.parse.urlencode({"from": now - days * 86400, "to": now + 86400, "symbol": sym, "resolution": "1D"})
     try:
         c = parse_entrade(fetch_json(ENTRADE + "?" + q))
-        if len(c) >= 30:
+        if len(c) >= (30 if days >= 60 else 5):
             _LASTGOOD[sym] = (c, "DNSE/Entrade")
             return c, "DNSE/Entrade"
         print("entrade history ngan:", sym, days, "ngay ->", len(c), "nen", file=sys.stderr)
@@ -224,7 +224,7 @@ def history(sym, days=420, slow_fallback=True):
     try:
         q = urllib.parse.urlencode({"sort": "date", "size": min(1000, int(days * 0.75) + 10), "q": "code:" + sym})
         c = parse_vndirect(fetch_json(VNDIRECT + "?" + q, timeout=6, tries=1))
-        if len(c) >= 30:
+        if len(c) >= (30 if days >= 60 else 5):
             _LASTGOOD[sym] = (c, "VNDIRECT")
             return c, "VNDIRECT"
     except Exception as e:
@@ -668,6 +668,8 @@ class H(BaseHTTPRequestHandler):
         try:
             if u.path == "/api/ping":
                 return send(self, 200, {"ok": True, "server": "vn-stock-analyzer"})
+            if u.path == "/api/health":
+                return send(self, 200, {"ok": True, **health()})
             if u.path == "/api/status":
                 return send(self, 200, {"ok": True, "fireant_token": bool(fireant_token()), "tests": self_test()})
             if u.path == "/api/stocknews":
@@ -755,6 +757,44 @@ class H(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
             self.end_headers()
+
+
+def health():
+    """Kiem tra truc tiep tung nguon (song song), do thoi gian phan hoi."""
+    now = int(time.time())
+    def ent(res, d):
+        return lambda: len(parse_entrade(fetch_json(ENTRADE + "?" + urllib.parse.urlencode({"from": now - d * 86400, "to": now + 86400, "symbol": "FPT", "resolution": res}), 8, 1)))
+    tests = [
+        ("DNSE/Entrade", "Lịch sử giá ngày, xếp hạng, biểu đồ", ent("1D", 40), 20),
+        ("DNSE/Entrade (nến phút)", "Biểu đồ 1 ngày / 3 ngày, giao dịch trong phiên", ent("1", 3), 20),
+        ("DNSE/Entrade (VN-Index)", "Chỉ số thị trường, sức mạnh so VN-Index", lambda: len(parse_entrade(fetch_json(ENTRADE_INDEX + "?" + urllib.parse.urlencode({"from": now - 40 * 86400, "to": now + 86400, "symbol": "VNINDEX", "resolution": "1D"}), 8, 1))), 20),
+        ("CafeF (bảng giá)", "Giá hiện tại, thay đổi trong ngày", lambda: len(board()), 50),
+        ("VNDIRECT (giá dự phòng)", "Lịch sử giá khi Entrade lỗi", lambda: len(parse_vndirect(fetch_json(VNDIRECT + "?" + urllib.parse.urlencode({"sort": "date", "size": 10, "q": "code:FPT"}), 8, 1))), 20),
+        ("VNDIRECT (chỉ số tài chính)", "P/E, P/B, ROE", lambda: 1 if ratios("FPT").get("pe") is not None else 0, 20),
+        ("Google News", "Tin tức theo mã", lambda: len(fetch_text("https://news.google.com/rss/search?q=FPT&hl=vi&gl=VN&ceid=VN:vi", 8)), 1000),
+    ]
+    if fireant_token():
+        tests.append(("FireAnt", "Nguồn giá bổ sung (có token)", lambda: len(parse_fireant(fireant_rows("FPT", 20))), 2))
+    out = [None] * len(tests)
+    def run(i):
+        name, role, fn, need = tests[i]
+        t0 = time.time()
+        try:
+            n = fn()
+            ok = bool(n) and n >= (1 if need > 100 else 1)
+            out[i] = {"name": name, "role": role, "ok": ok, "ms": int((time.time() - t0) * 1000), "detail": ("%s bản ghi" % n) if ok else "không có dữ liệu"}
+        except Exception as e:
+            out[i] = {"name": name, "role": role, "ok": False, "ms": int((time.time() - t0) * 1000), "detail": str(e)[:120]}
+    th = [threading.Thread(target=run, args=(i,), daemon=True) for i in range(len(tests))]
+    for t in th:
+        t.start()
+    for t in th:
+        t.join(25)
+    for i, t in enumerate(tests):
+        if out[i] is None:
+            out[i] = {"name": t[0], "role": t[1], "ok": False, "ms": 25000, "detail": "quá thời gian chờ"}
+    sc = {"ready": len(_scan["data"]), "busy": _scan["busy"], "fail": len(_scan["fail"])}
+    return {"sources": out, "scan": sc, "time": int(time.time())}
 
 
 def self_test():
