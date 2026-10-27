@@ -349,11 +349,11 @@ FINFO_NEWS = "https://api-finfo.vndirect.com.vn/v4/news"
 
 
 def stock_news():
-    """Tin doanh nghiep (VNDIRECT finfo company_news, 12 ngay gan nhat); moi tin co danh sach ma (tagCodes)."""
+    """Tin doanh nghiep (VNDIRECT finfo company_news, 32 ngay gan nhat); moi tin co danh sach ma (tagCodes)."""
     def go():
-        since = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600 - 12 * 86400))
+        since = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600 - 32 * 86400))
         out, page = [], 1
-        while page <= 8:
+        while page <= 14:
             q = "newsType:company_news~locale:VN~newsDate:gte:%s" % since
             j = fetch_json(FINFO_NEWS + "?" + urllib.parse.urlencode({"q": q, "size": 100, "page": page, "sort": "newsDate:desc"}, safe=":~"), 20)
             for e in j.get("data", []):
@@ -386,6 +386,34 @@ def stock_events(sym):
     return cached("ev" + sym, 3 * 3600, go)
 
 
+def google_news(sym):
+    """Tin theo tung ma trong 30 ngay tu Google News RSS (tong hop CafeF, VnEconomy, Vietstock, bao chi...). Loc trung tieu de."""
+    def go():
+        q = urllib.parse.quote('"%s" cổ phiếu when:30d' % sym)
+        root = ET.fromstring(fetch_text("https://news.google.com/rss/search?q=%s&hl=vi&gl=VN&ceid=VN:vi" % q, 12))
+        lim = time.time() - 32 * 86400
+        out = []
+        for rank, it in enumerate(root.iter("item")):
+            title = (it.findtext("title") or "").strip()
+            src = (it.findtext("source") or "").strip()
+            if src and title.endswith(" - " + src):
+                title = title[: -len(src) - 3].strip()
+            try:
+                ts = email.utils.parsedate_to_datetime(it.findtext("pubDate")).timestamp()
+            except Exception:
+                continue
+            # chi giu tin co ma trong tieu de, hoac nam trong 3 ket qua lien quan nhat (tieu de thuong ghi ten cong ty)
+            if not title or ts < lim or not (re.search(r"\b%s\b" % re.escape(sym), title.upper()) or rank < 3):
+                continue
+            out.append({"title": title, "abs": "", "d": time.strftime("%Y-%m-%d", time.gmtime(ts + 7 * 3600)), "src": src or "Google News",
+                        "link": (it.findtext("link") or "").strip(), "syms": [sym], "sent": news_sentiment(title), "hot": False, "_t": ts})
+        out.sort(key=lambda x: -x["_t"])
+        for x in out:
+            x.pop("_t", None)
+        return out[:10]
+    return cached("gn" + sym, 30 * 60, go)
+
+
 def stock_info(syms):
     news = []
     try:
@@ -393,6 +421,23 @@ def stock_info(syms):
         news = [n for n in stock_news() if sset & set(n["syms"])]
     except Exception as e:
         print("tin doanh nghiep loi:", e, file=sys.stderr)
+    try:
+        from concurrent.futures import ThreadPoolExecutor
+        def one(x):
+            try:
+                return google_news(x)
+            except Exception as e:
+                print("google news %s loi: %s" % (x, e), file=sys.stderr)
+                return []
+        seen = {n["title"].lower() for n in news}
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            for lst in ex.map(one, syms[:30]):
+                for n in lst:
+                    if n["title"].lower() not in seen:
+                        seen.add(n["title"].lower())
+                        news.append(n)
+    except Exception as e:
+        print("google news loi:", e, file=sys.stderr)
     events, errs = [], 0
     for s in syms[:40]:
         try:
@@ -400,7 +445,7 @@ def stock_info(syms):
         except Exception as e:
             errs += 1
             print("su kien %s loi: %s" % (s, e), file=sys.stderr)
-    return {"ok": True, "news": news[:300], "events": events, "evErr": errs, "time": time.strftime("%H:%M %d/%m", time.gmtime(time.time() + 7 * 3600))}
+    return {"ok": True, "news": news[:600], "events": events, "evErr": errs, "time": time.strftime("%H:%M %d/%m", time.gmtime(time.time() + 7 * 3600))}
 
 
 NEWS_FEEDS = [("VnEconomy", "https://vneconomy.vn/chung-khoan.rss"), ("VnEconomy", "https://vneconomy.vn/nhip-cau-doanh-nghiep.rss"),
