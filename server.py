@@ -345,23 +345,87 @@ def scan_payload(syms):
             "index": [round(x["c"], 2) for x in idx], "indexT": [x["t"] for x in idx]}
 
 
+FINFO_NEWS = "https://api-finfo.vndirect.com.vn/v4/news"
+
+
+def stock_news():
+    """Tin doanh nghiep (VNDIRECT finfo company_news, 12 ngay gan nhat); moi tin co danh sach ma (tagCodes)."""
+    def go():
+        since = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600 - 12 * 86400))
+        out, page = [], 1
+        while page <= 8:
+            q = "newsType:company_news~locale:VN~newsDate:gte:%s" % since
+            j = fetch_json(FINFO_NEWS + "?" + urllib.parse.urlencode({"q": q, "size": 100, "page": page, "sort": "newsDate:desc"}, safe=":~"), 20)
+            for e in j.get("data", []):
+                title = (e.get("newsTitle") or "").strip()
+                tags = [x.strip().upper() for x in (e.get("tagCodes") or "").split(",") if x.strip()]
+                if not title or not tags:
+                    continue
+                ab = (e.get("newsAbstract") or "").strip()
+                out.append({"title": title, "abs": ab[:220], "d": e.get("newsDate"), "src": e.get("newsSource") or "VNDIRECT",
+                            "link": e.get("newsUrl") or e.get("dstockUrl") or "", "syms": tags[:6], "sent": news_sentiment(title + " " + ab),
+                            "hot": e.get("hotNews") == "Y"})
+            if page >= int(j.get("totalPages") or 1):
+                break
+            page += 1
+        if not out:
+            raise RuntimeError("khong lay duoc tin doanh nghiep")
+        return out
+    return cached("stocknews", 15 * 60, go)
+
+
+def stock_events(sym):
+    """Su kien quyen / co tuc / DHCD / giao dich bo sung cua 1 ma trong 45 ngay gan nhat va sap toi (VNDIRECT finfo)."""
+    def go():
+        since = time.strftime("%Y-%m-%d", time.gmtime(time.time() + 7 * 3600 - 45 * 86400))
+        q = "code:%s~locale:VN~effectiveDate:gte:%s" % (sym, since)
+        j = fetch_json(FINFO_EVENTS + "?" + urllib.parse.urlencode({"q": q, "size": 12, "sort": "effectiveDate:desc"}, safe=":~"), 12)
+        return [{"s": sym, "t": e.get("type"), "desc": e.get("typeDesc", ""), "note": e.get("note", ""), "ex": e.get("effectiveDate"),
+                 "pay": e.get("expiredDate") or e.get("actualDate") or "", "div": e.get("dividend"), "ratio": e.get("ratio")}
+                for e in j.get("data", []) if e.get("effectiveDate")]
+    return cached("ev" + sym, 3 * 3600, go)
+
+
+def stock_info(syms):
+    news = []
+    try:
+        sset = set(syms)
+        news = [n for n in stock_news() if sset & set(n["syms"])]
+    except Exception as e:
+        print("tin doanh nghiep loi:", e, file=sys.stderr)
+    events, errs = [], 0
+    for s in syms[:40]:
+        try:
+            events += stock_events(s)
+        except Exception as e:
+            errs += 1
+            print("su kien %s loi: %s" % (s, e), file=sys.stderr)
+    return {"ok": True, "news": news[:300], "events": events, "evErr": errs, "time": time.strftime("%H:%M %d/%m", time.gmtime(time.time() + 7 * 3600))}
+
+
 NEWS_FEEDS = [("VnEconomy", "https://vneconomy.vn/chung-khoan.rss"), ("VnEconomy", "https://vneconomy.vn/nhip-cau-doanh-nghiep.rss"),
-              ("VnEconomy", "https://vneconomy.vn/tai-chinh.rss")]
+              ("VnEconomy", "https://vneconomy.vn/tai-chinh.rss"),
+              ("Vietstock", "https://vietstock.vn/830/chung-khoan/co-phieu.rss"),
+              ("Vietstock PTKT", "https://vietstock.vn/585/chung-khoan/phan-tich-ky-thuat.rss"),
+              ("CafeF", "https://cafef.vn/thi-truong-chung-khoan.rss")]
 # Them nguon RSS khac: dat bien moi truong TIN_RSS, vi du:  TIN_RSS="TNCK|https://.../chung-khoan.rss,CafeF|https://.../x.rss"
 for _x in (os.environ.get("TIN_RSS") or "").split(","):
     if "|" in _x:
         _n, _u = _x.split("|", 1)
         if _u.strip().startswith("https://"):
             NEWS_FEEDS.append((_n.strip() or "RSS", _u.strip()))
-POS = ["tăng mạnh", "tăng trần", "bứt phá", "khởi sắc", "lãi kỷ lục", "lợi nhuận tăng", "tăng trưởng", "mua ròng", "vượt kế hoạch",
-       "cổ tức", "kỷ lục", "hồi phục", "tích cực", "nâng", "lãi"]
-NEG = ["giảm sâu", "giảm mạnh", "giảm sàn", "bán tháo", "bán ròng", "lỗ", "sụt giảm", "thua lỗ", "vi phạm", "bị phạt", "đình chỉ",
-       "cảnh báo", "tiêu cực", "hạ", "rủi ro", "nợ xấu", "thanh tra", "khởi tố"]
+POS = [r"tăng trần", r"tăng mạnh", r"bứt phá", r"khởi sắc", r"lãi kỷ lục", r"lợi nhuận tăng", r"lãi tăng", r"tăng trưởng", r"mua ròng",
+       r"vượt kế hoạch", r"hoàn thành (?:vượt )?kế hoạch", r"(?:chia|trả) cổ tức", r"hồi phục", r"nâng (?:dự báo|khuyến nghị|hạng|mục tiêu)",
+       r"trúng thầu", r"ký (?:kết )?hợp đồng", r"lãi ròng", r"doanh thu tăng", r"lãi (?!suất)\d", r"tăng\s+\d", r"kỷ lục", r"tích cực"]
+NEG = [r"giảm sâu", r"giảm mạnh", r"giảm sàn", r"bán tháo", r"bán ròng", r"báo lỗ", r"lỗ ròng", r"thua lỗ", r"lỗ quý", r"lỗ lũy kế", r"sụt giảm",
+       r"vi phạm", r"bị phạt", r"xử phạt", r"đình chỉ", r"cảnh báo", r"hủy niêm yết", r"hạn chế giao dịch", r"diện (?:kiểm soát|cảnh báo)",
+       r"hạ (?:dự báo|khuyến nghị|xếp hạng|triển vọng|mục tiêu)", r"nợ xấu", r"thanh tra", r"khởi tố", r"bắt tạm giam", r"lợi nhuận giảm",
+       r"lãi giảm", r"doanh thu giảm", r"giảm lợi nhuận", r"chậm công bố", r"pha loãng", r"giải chấp", r"tiêu cực", r"giảm\s+\d"]
 
 
 def news_sentiment(text):
     t = text.lower()
-    sc = sum(1 for w in POS if w in t) - sum(1 for w in NEG if w in t)
+    sc = sum(1 for w in POS if re.search(w, t)) - sum(1 for w in NEG if re.search(w, t))
     return 1 if sc > 0 else -1 if sc < 0 else 0
 
 
@@ -392,7 +456,7 @@ def load_news():
                 ts = 0
             items.append({"title": title, "link": link, "t": ts, "src": src, "desc": desc.strip()[:240]})
     items.sort(key=lambda x: -x["t"])
-    return items[:60]
+    return items[:150]
 
 
 def news_payload(syms):
@@ -403,7 +467,10 @@ def news_payload(syms):
         tags = sorted({m for m in re.findall(r"\b[A-Z][A-Z0-9]{2}\b", txt) if m in ss})
         out.append({"title": it["title"], "link": it["link"], "t": it["t"], "src": it["src"], "syms": tags,
                     "sent": news_sentiment(txt)})
-    return {"ok": True, "items": out[:40]}
+    srcs = {}
+    for o in out:
+        srcs[o["src"]] = srcs.get(o["src"], 0) + 1
+    return {"ok": True, "items": out[:120], "srcs": srcs}
 
 
 def send(h, code, obj):
@@ -455,6 +522,9 @@ class H(BaseHTTPRequestHandler):
                 return send(self, 200, {"ok": True, "server": "vn-stock-analyzer"})
             if u.path == "/api/status":
                 return send(self, 200, {"ok": True, "fireant_token": bool(fireant_token()), "tests": self_test()})
+            if u.path == "/api/stocknews":
+                syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:40]
+                return send(self, 200, stock_info(syms))
             if u.path == "/api/dividends":
                 d = dividends()
                 return send(self, 200, {"ok": True, "n": len(d), "rows": d, "source": "VNDIRECT finfo"})
