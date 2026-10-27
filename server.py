@@ -414,6 +414,65 @@ def google_news(sym):
     return cached("gn" + sym, 30 * 60, go)
 
 
+SECTOR_RULES = [
+    ("Ngân hàng", [r"ngân hàng"], True),
+    ("Chứng khoán", [r"chứng khoán"], True),
+    ("Bảo hiểm", [r"bảo hiểm"], True),
+    ("Bất động sản", [r"bất động sản", r"địa ốc", r"khu đô thị", r"khu công nghiệp", r"nhà ở"], False),
+    ("Thép", [r"thép", r"tôn mạ", r"tôn "], False),
+    ("Dầu khí", [r"dầu khí", r"xăng dầu", r"khí hóa lỏng", r"lọc dầu", r"khí đốt"], False),
+    ("Công nghệ", [r"phần mềm", r"công nghệ thông tin", r"viễn thông", r"tin học", r"chuyển đổi số"], False),
+    ("Bán lẻ", [r"bán lẻ", r"siêu thị", r"cửa hàng"], False),
+    ("Điện & Tiện ích", [r"thủy điện", r"nhiệt điện", r"điện gió", r"điện mặt trời", r"cấp nước", r"nước sạch", r"sản xuất và kinh doanh điện", r"truyền tải điện", r"phân phối điện"], False),
+    ("Xây dựng & ĐTC", [r"xây dựng", r"xây lắp", r"hạ tầng", r"cầu đường", r"giao thông", r"công viên cây xanh", r"thi công"], False),
+    ("Hàng tiêu dùng", [r"thủy sản", r"thực phẩm", r"\bsữa\b", r"đồ uống", r"\bbia\b", r"nước giải khát", r"dệt may", r"may mặc", r"nông sản", r"\bđường\b", r"tiêu dùng", r"gạo", r"chăn nuôi", r"bánh kẹo"], False),
+    ("Dược phẩm", [r"dược", r"y tế", r"bệnh viện"], False),
+    ("Hóa chất", [r"hóa chất", r"phân bón", r"nhựa", r"cao su"], False),
+    ("Khai khoáng", [r"khai thác", r"khoáng sản", r"than"], False),
+    ("Hàng không", [r"hàng không", r"sân bay", r"mặt đất"], False),
+    ("Vận tải & Cảng", [r"vận tải", r"cảng", r"logistics", r"kho bãi", r"vận chuyển"], False),
+    ("Du lịch & Khách sạn", [r"du lịch", r"khách sạn", r"lữ hành"], False),
+]
+
+
+def classify_sector(name, summary):
+    """Phan loai nganh theo ten cong ty va mo ta hoat dong (VNDIRECT company_profiles); chi la uoc luong theo tu khoa."""
+    nm = (name or "").lower()
+    sm = re.sub(r"bưu điện", "", (summary or "").lower()[:500])
+    for label, pats, name_only in SECTOR_RULES:
+        if any(re.search(p, nm) for p in pats):
+            return label
+    for label, pats, name_only in SECTOR_RULES:
+        if not name_only and any(re.search(p, sm) for p in pats):
+            return label
+    return ""
+
+
+def sectors(syms):
+    out, need = {}, []
+    for x in syms:
+        v = _cache.get("sec" + x)
+        if v and time.time() - v[0] < 86400:
+            out[x] = v[1]
+        else:
+            need.append(x)
+    for i in range(0, len(need), 25):
+        chunk = need[i:i + 25]
+        try:
+            q = "code:" + ",".join(chunk)
+            j = fetch_json("https://api-finfo.vndirect.com.vn/v4/company_profiles?" + urllib.parse.urlencode({"q": q, "size": 50}, safe=":,"), 15)
+            got = {e.get("code"): classify_sector(e.get("vnName"), e.get("vnSummary")) for e in j.get("data", [])}
+        except Exception as e:
+            print("nganh loi:", e, file=sys.stderr)
+            got = {}
+        for x in chunk:
+            if x in got:
+                with _lock:
+                    _cache["sec" + x] = (time.time(), got[x])
+                out[x] = got[x]
+    return out
+
+
 def stock_info(syms):
     news = []
     try:
@@ -584,6 +643,9 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/news":
                 syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:120]
                 return send(self, 200, news_payload(syms))
+            if u.path == "/api/sectors":
+                syms = [x for x in (qs.get("symbols", [""])[0] or "").upper().split(",") if x.isalnum() and len(x) <= 5][:60]
+                return send(self, 200, {"ok": True, "sectors": sectors(syms)})
             if u.path == "/api/ratios":
                 if not sym.isalnum() or len(sym) > 5:
                     return send(self, 400, {"ok": False, "error": "ma khong hop le"})
