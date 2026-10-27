@@ -159,13 +159,19 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 .thm button.on{background:#fff;color:#0b2a6f}
 #div small.dchg{display:block;font-size:11.5px;margin-top:1px}
 .ovl .ovlb{flex:0 0 100%;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--mut);margin:2px 0 0}.ovl .ovlb2{margin-top:6px}
+.sigbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:6px 0 4px;font-size:13px}.sigbar:empty{display:none}.sgb{color:#fff;font-weight:800;padding:5px 12px;border-radius:8px;letter-spacing:.3px}.sgt{color:var(--ink)}.sgw{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--mut)}.sgw i{font-style:normal;font-weight:600}
+.hrow{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+#rfb{position:relative;overflow:hidden;min-width:138px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.14);color:#fff;font-weight:800;font-size:13px;padding:7px 14px;border-radius:99px;cursor:pointer}
+#rfb .rfp{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .25s}
+#rfb .rft{position:relative;z-index:1}#rfb.busy{cursor:progress}#rfb:hover{background:rgba(255,255,255,.26)}
+@keyframes rfspin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <header><div class="wrap">
 <div><h1>📈 VN Stock Analyzer</h1><small>Phân tích chứng khoán Việt Nam chuyên nghiệp</small></div>
 <button id="starbtn" title="Tự đánh giá sao"><span class="sbs"><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i><i class="sb e">★</i></span></button>
-<div class="hr"><span class="live"><i></i><span id="clock">--:--:--</span> · <span id="mkt">HOSE / HNX</span> · <b id="mode">mô phỏng</b></span><span class="thm" id="thm"><button data-th="light">☀️ Sáng</button><button data-th="dark">🌙 Tối</button></span></div>
+<div class="hr"><span class="live"><i></i><span id="clock">--:--:--</span> · <span id="mkt">HOSE / HNX</span> · <b id="mode">mô phỏng</b></span><div class="hrow"><button id="rfb" type="button" title="Làm mới toàn bộ dữ liệu của trang"><i class="rfp"></i><span class="rft">🔄 Làm mới</span></button><span class="thm" id="thm"><button data-th="light">☀️ Sáng</button><button data-th="dark">🌙 Tối</button></span></div></div>
 </div></header>
 <nav class="pgtabs" id="pgtabs"><button data-p="home" class="on">Trang chủ phân tích</button><button data-p="pf">Danh Mục Đầu Tư</button></nav>
 
@@ -182,7 +188,7 @@ h3.imph{font-size:17px!important}.pgsc h4,.aic h4{font-size:16px!important}
 <section class="card c8" id="chartsec">
 <h2>Biểu Đồ Giá</h2>
 <div class="rng" id="rng"><button data-r="d1">1 ngày</button><button data-r="d3">3 ngày</button><button data-r="w1">1 tuần</button><button data-r="m1">1 tháng</button><button data-r="y1">1 năm</button><button data-r="all">Tất cả</button></div>
-<div class="ovl" id="ovl"><b class="ovlb">Trên giá</b><button data-o="sig" style="color:#16a34a">● Tín hiệu Mua/Bán</button><button data-o="sma20" style="color:#d99a00">SMA20</button><button data-o="sma50" style="color:#0ea5e9">SMA50</button><button data-o="e20" style="color:#ca8a04">EMA 20</button><button data-o="e50" style="color:#0284c7">EMA 50</button><button data-o="e200" style="color:#ef4444">EMA 200</button><button data-o="bb" style="color:#8b5cf6">Bollinger</button><button data-o="vwap" style="color:#ec4899">VWAP</button><button data-o="sup" style="color:#16a34a">Supertrend</button><button data-o="fib">Fibonacci</button><button data-o="sr">Hỗ trợ/Kháng cự</button><b class="ovlb ovlb2">Khung dưới</b><button data-o="rsi" style="color:#7c3aed">RSI</button><button data-o="macd" style="color:#2563eb">MACD</button><button data-o="stoch" style="color:#ea580c">Stoch</button><button data-o="srsi" style="color:#8b5cf6">Stoch RSI</button><button data-o="adx" style="color:#d97706">ADX</button></div>
+<div class="ovl" id="ovl"><b class="ovlb">Trên giá</b><button data-o="sig" style="color:#16a34a">● Tín hiệu Mua/Bán + vùng giá</button><button data-o="sma20" style="color:#d99a00">SMA20</button><button data-o="sma50" style="color:#0ea5e9">SMA50</button><button data-o="e20" style="color:#ca8a04">EMA 20</button><button data-o="e50" style="color:#0284c7">EMA 50</button><button data-o="e200" style="color:#ef4444">EMA 200</button><button data-o="bb" style="color:#8b5cf6">Bollinger</button><button data-o="vwap" style="color:#ec4899">VWAP</button><button data-o="sup" style="color:#16a34a">Supertrend</button><button data-o="fib">Fibonacci</button><button data-o="sr">Hỗ trợ/Kháng cự</button><b class="ovlb ovlb2">Khung dưới</b><button data-o="rsi" style="color:#7c3aed">RSI</button><button data-o="macd" style="color:#2563eb">MACD</button><button data-o="stoch" style="color:#ea580c">Stoch</button><button data-o="srsi" style="color:#8b5cf6">Stoch RSI</button><button data-o="adx" style="color:#d97706">ADX</button></div><div id="sigbar" class="sigbar"></div>
 <div class="cvinfo" id="cvinfo"></div>
 <canvas id="cv"></canvas>
 <div class="cvcap" id="cvcap"></div>
@@ -324,12 +330,13 @@ $("mode").style.color=REAL&&!st?"#4ade80":"#fde68a";
 if(S&&DB){const g=DB[S]||["Cổ phiếu "+S];$("nm").textContent=g[0]+" · "+(REAL?"giá thật · "+(INSRC||q.src||SRC.split(" ")[0]):VERIFIED.has(S)?"dữ liệu đóng cửa 20/10/2026 (CafeF)":"⚠ giá ước tính, chưa đối chiếu")}}
 function staleInfo(t,ss){const m=/(\d+):(\d+) (\d+)\/(\d+)\/(\d+)/.exec(t);if(!m)return null;
 const src=Date.UTC(+m[5],m[4]-1,+m[3],+m[1]-7,+m[2]);if(ss.open&&Date.now()-src>15*60000)return "nguồn chưa cập nhật (trễ "+Math.round((Date.now()-src)/60000)+" phút)";return null}
+var RLRT={};
 async function realLoad(sym){
 try{const j=await api("/api/history?symbol="+encodeURIComponent(sym));if(S!==sym)return;
 const k=j.candles.map(x=>({o:x.o,h:x.h,l:x.l,c:x.c,v:x.v,t:x.t}));if(k.length<60)throw 0;
 C=k;T=[];lastBar=0;DAYB=0;DAYV=0;NOOPEN=false;REAL=true;SRC=j.source;lastOk=Date.now();
 render();showMode();pollReal(true)}
-catch(e){if(S!==sym)return;try{await rebase(sym)}catch(e2){REAL=false;showMode()}}}
+catch(e){if(S!==sym)return;try{await rebase(sym);RLRT[sym]=(RLRT[sym]||0)+1;if(SERVER&&!DIRECT&&RLRT[sym]<=6)setTimeout(()=>{if(S===sym)realLoad(sym)},15000)}catch(e2){REAL=false;showMode();RLRT[sym]=(RLRT[sym]||0)+1;try{$("nm").textContent="⚠ Chưa tải được dữ liệu từ máy chủ – đang tự thử lại…"}catch(x){}if(RLRT[sym]<=15)setTimeout(()=>{if(S===sym&&!REAL)realLoad(sym)},6000)}}}
 async function rebase(sym){const j=await api("/api/quotes?symbols="+encodeURIComponent(sym)),q=j.quotes[sym];if(!q)throw 0;if(S!==sym)return;
 const g=gen(sym).candles,k=q.p/g[g.length-1].c,n=g.length,now=Math.floor(Date.now()/1000);
 C=g.map((x,i)=>({o:x.o*k,h:x.h*k,l:x.l*k,c:x.c*k,v:x.v,t:now-(n-1-i)*86400}));
@@ -504,8 +511,8 @@ const h=`<div class="th"><b>Tổng hợp chỉ báo kỹ thuật (nến ngày)</
 <div class="tnote">Chỉ báo tính theo công thức chuẩn trên toàn bộ lịch sử có sẵn${REAL?" (dữ liệu thật)":" (dữ liệu mô phỏng ở bản web – chạy gói có máy chủ để dùng dữ liệu thật)"}. Tín hiệu kỹ thuật chỉ mang tính tham khảo, không đảm bảo lợi nhuận.</div>`;
 if(h!==TECHH){const gb=$("gaugebox");if(gb)$("ratiosec").appendChild(gb);el.innerHTML=h;TECHH=h}const gs=$("gslot"),gb2=$("gaugebox");if(gs&&gb2&&gb2.parentNode!==gs)gs.appendChild(gb2)}
 /* ===== Nến phút: thật (máy chủ) hoặc mô phỏng (bản web) ===== */
-let RNG="m1",OVL={sma20:1,sma50:1,bb:0,fib:0,sr:0,rsi:1,macd:1,stoch:0,sig:0,e20:0,e50:0,e200:0,vwap:0,sup:0,srsi:0,adx:0},IB={},CVL=null,HOV=false;
-try{const z=JSON.parse(localStorage.getItem("ovl")||"null");if(z)Object.assign(OVL,z);const r=localStorage.getItem("rng");if(r&&/^(d1|d3|w1|m1|y1|all)$/.test(r))RNG=r}catch(e){}
+let RNG="m1",OVL={sma20:1,sma50:1,bb:0,fib:0,sr:0,rsi:1,macd:1,stoch:0,sig:1,e20:0,e50:0,e200:0,vwap:0,sup:0,srsi:0,adx:0},IB={},CVL=null,HOV=false;
+try{const z=JSON.parse(localStorage.getItem("ovl2")||"null");if(z)Object.assign(OVL,z);const r=localStorage.getItem("rng");if(r&&/^(d1|d3|w1|m1|y1|all)$/.test(r))RNG=r}catch(e){}
 const RN={w1:5,m1:22,y1:250,all:1e9};
 function tsOfIdx(i){if(C[i]&&C[i].t)return C[i].t;const m=/(\d+)\/(\d+)\/(\d+)/.exec(lastTD());let d=new Date(Date.UTC(+m[3],m[2]-1,+m[1],2,0));for(let k=C.length-1;k>i;k--){d=new Date(d-864e5);while(d.getUTCDay()===0||d.getUTCDay()===6)d=new Date(d-864e5)}return Math.floor(d/1000)}
 const vnD=t=>{const x=new Date((t+7*3600)*1000);return{dd:String(x.getUTCDate()).padStart(2,"0"),mm:String(x.getUTCMonth()+1).padStart(2,"0"),yy:x.getUTCFullYear(),hh:String(x.getUTCHours()).padStart(2,"0"),mi:String(x.getUTCMinutes()).padStart(2,"0")}};
@@ -529,12 +536,13 @@ function chart(){
 const cv=$("cv"),dpr=window.devicePixelRatio||1,cd=chartData(),d=cd.d,I=calcInd(d),subs=["rsi","macd","stoch","srsi","adx"].filter(k=>OVL[k]),phone=(cv.parentElement.clientWidth||600)<520,priceH=(phone?250:330)+(phone?0:CHX),pH=phone?74:88,H=priceH+subs.length*pH;
 cv.style.height=H+"px";const W=cv.clientWidth;if(!W)return;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);
 const st=getComputedStyle(document.documentElement),col=k=>st.getPropertyValue(k).trim()||"#888",up=col("--up"),dn=col("--dn"),line=col("--line"),mut=col("--mut"),ink=col("--ink");
-const N=Math.min(cd.n,d.length),off=d.length-N,pw=52,cw=(W-pw)/N,ph=priceH-24,vh=phone?36:48;
-let hi=-1e18,lo=1e18;for(let i=off;i<d.length;i++){hi=Math.max(hi,d[i].h);lo=Math.min(lo,d[i].l);if(OVL.bb&&nz(I.bb.up[i])){hi=Math.max(hi,I.bb.up[i]);lo=Math.min(lo,I.bb.lo[i])}}const mg=(hi-lo)*.06||hi*.01;hi+=mg;lo-=mg;
+const N=Math.min(cd.n,d.length),off=d.length-N,pw=52,cw=(W-pw)/N,ph=priceH-24,vh=phone?36:48,Z=OVL.sig?sigCalc(d,I,off,N):null;try{sigBar(Z)}catch(e){}
+let hi=-1e18,lo=1e18;for(let i=off;i<d.length;i++){hi=Math.max(hi,d[i].h);lo=Math.min(lo,d[i].l);if(OVL.bb&&nz(I.bb.up[i])){hi=Math.max(hi,I.bb.up[i]);lo=Math.min(lo,I.bb.lo[i])}}if(Z){hi=Math.max(hi,Z.sell[1]);lo=Math.min(lo,Z.buy[0])}const mg=(hi-lo)*.06||hi*.01;hi+=mg;lo-=mg;
 const y=v=>8+(hi-v)/(hi-lo)*(ph-8),X=i=>(i-off)*cw+cw/2,vm=Math.max(...d.slice(off).map(a=>a.v))||1;
 g.font="11px sans-serif";g.textBaseline="alphabetic";g.textAlign="left";g.lineWidth=1;
 for(let i=0;i<=5;i++){const v=lo+(hi-lo)*i/5,yy=y(v);g.strokeStyle=line;g.beginPath();g.moveTo(0,yy);g.lineTo(W-pw,yy);g.stroke();g.fillStyle=mut;g.fillText(f(v),W-pw+6,yy+4)}
 const pl=(arr,fy,c,w,dash)=>{g.beginPath();g.strokeStyle=c;g.lineWidth=w||1.5;g.setLineDash(dash||[]);let s=false;for(let i=off;i<d.length;i++){const v=arr[i];if(!nz(v)){s=false;continue}s?g.lineTo(X(i),fy(v)):g.moveTo(X(i),fy(v));s=true}g.stroke();g.setLineDash([])};
+if(Z){const zb=(z,c,tx)=>{const y1=y(z[1]),y2=y(z[0]);g.fillStyle=c;g.globalAlpha=.16;g.fillRect(0,y1,W-pw,Math.max(2,y2-y1));g.globalAlpha=1;g.fillStyle=c;g.font="bold 11px sans-serif";g.fillText(tx+" "+f(z[0],2)+"–"+f(z[1],2),6,Math.max(11,y1+12));g.font="11px sans-serif"};zb(Z.sell,"#dc2626","Vùng nên bán");zb(Z.buy,"#16a34a","Vùng nên mua")}
 d.slice(off).forEach((a,j)=>{const cx=j*cw+cw/2,c=a.c>=a.o?up:dn;g.fillStyle=c;g.strokeStyle=c;g.lineWidth=1;g.globalAlpha=.3;g.fillRect(cx-cw*.35,ph-a.v/vm*vh,Math.max(1,cw*.7),a.v/vm*vh);g.globalAlpha=1;g.beginPath();g.moveTo(cx,y(a.h));g.lineTo(cx,y(a.l));g.stroke();const t=y(Math.max(a.o,a.c)),b=Math.max(1.2,Math.abs(y(a.o)-y(a.c)));g.fillRect(cx-Math.max(.5,cw*.35),t,Math.max(1,cw*.7),b)});
 g.save();g.beginPath();g.rect(0,0,W-pw,ph+2);g.clip();if(OVL.bb){g.globalAlpha=.08;g.fillStyle="#8b5cf6";g.beginPath();let s=false;for(let i=off;i<d.length;i++)if(nz(I.bb.up[i])){s?g.lineTo(X(i),y(I.bb.up[i])):g.moveTo(X(i),y(I.bb.up[i]));s=true}for(let i=d.length-1;i>=off;i--)if(nz(I.bb.lo[i]))g.lineTo(X(i),y(I.bb.lo[i]));g.closePath();g.fill();g.globalAlpha=1;pl(I.bb.up,y,"#8b5cf6",1.2);pl(I.bb.lo,y,"#8b5cf6",1.2);pl(I.bb.mid,y,"#8b5cf6",1,[3,3])}
 if(OVL.sma20)pl(I.s20,y,"#f5b700",1.6);if(OVL.sma50)pl(I.s50,y,"#38bdf8",1.6);if(OVL.e20)pl(I.e20,y,"#eab308",1.4);if(OVL.e50)pl(I.e50,y,"#0ea5e9",1.4);if(OVL.e200)pl(I.e200,y,"#ef4444",1.6);
@@ -559,13 +567,30 @@ for(let i=off;i<d.length;i++)if(nz(M.h[i])){g.fillStyle=M.h[i]>=0?up:dn;g.global
 if(k==="stoch"){lab("Stochastic(14,3,3)  %K "+(lastV(I.st.k)!=null?f(lastV(I.st.k),1):"—")+" · %D "+(lastV(I.st.d)!=null?f(lastV(I.st.d),1):"—"));[20,80].forEach(v=>{g.strokeStyle=line;g.setLineDash([4,4]);g.beginPath();g.moveTo(0,Y(v,0,100));g.lineTo(W-pw,Y(v,0,100));g.stroke();g.setLineDash([]);g.fillStyle=mut;g.fillText(v,W-pw+6,Y(v,0,100)+4)});pl(I.st.k,v=>Y(v,0,100),"#f97316",1.4);pl(I.st.d,v=>Y(v,0,100),"#2563eb",1.4)}if(k==="srsi"){lab("Stoch RSI(14,3,3)  %K "+(lastV(I.srsi.k)!=null?f(lastV(I.srsi.k),1):"—")+" · %D "+(lastV(I.srsi.d)!=null?f(lastV(I.srsi.d),1):"—"));[20,80].forEach(v=>{g.strokeStyle=line;g.setLineDash([4,4]);g.beginPath();g.moveTo(0,Y(v,0,100));g.lineTo(W-pw,Y(v,0,100));g.stroke();g.setLineDash([]);g.fillStyle=mut;g.fillText(v,W-pw+6,Y(v,0,100)+4)});pl(I.srsi.k,v=>Y(v,0,100),"#8b5cf6",1.4);pl(I.srsi.d,v=>Y(v,0,100),"#f97316",1.4)}
 if(k==="adx"){const A=I.adx;let mx=40;for(let i=off;i<d.length;i++)[A.adx[i],A.pdi[i],A.mdi[i]].forEach(v=>{if(nz(v))mx=Math.max(mx,v)});mx=Math.ceil(mx/10)*10;lab("ADX(14)  "+(lastV(A.adx)!=null?f(lastV(A.adx),1):"—")+" · +DI "+(lastV(A.pdi)!=null?f(lastV(A.pdi),0):"—")+" · −DI "+(lastV(A.mdi)!=null?f(lastV(A.mdi),0):"—"));g.strokeStyle=line;g.setLineDash([4,4]);g.beginPath();g.moveTo(0,Y(25,0,mx));g.lineTo(W-pw,Y(25,0,mx));g.stroke();g.setLineDash([]);g.fillStyle=mut;g.fillText("25",W-pw+6,Y(25,0,mx)+4);pl(A.pdi,v=>Y(v,0,mx),up,1.2);pl(A.mdi,v=>Y(v,0,mx),dn,1.2);pl(A.adx,v=>Y(v,0,mx),"#f97316",1.8)}});
 CVL={N,off,cw,d,intra:cd.intra};$("cvcap").textContent=cd.cap;if(!HOV)cvInfo(d.length-1)}
+function sigCalc(d,I,off,N){const L=d.length-1;if(L<20)return null;const px=d[L].c,A=(()=>{try{return atr(d.slice(-60),14)}catch(e){return 0}})()||px*.012,it=[];let sc=0;const add=(v,t)=>{sc+=v;it.push([v,t])};
+const g=a=>a&&nz(a[L])?a[L]:null,e20=g(I.e20),e50=g(I.e50);
+if(e20!=null)add(px>e20?1:-1,px>e20?"Giá trên EMA20":"Giá dưới EMA20");
+if(e20!=null&&e50!=null)add(e20>e50?1:-1,e20>e50?"EMA20 > EMA50":"EMA20 < EMA50");
+const mh=g(I.macd.h),mp=nz(I.macd.h[L-1])?I.macd.h[L-1]:mh;if(mh!=null)add(mh>0?1:-1,mh>0?(mh>=mp?"MACD dương, tăng":"MACD dương"):(mh>mp?"MACD âm, cải thiện":"MACD âm"));
+const r=g(I.rsi);if(r!=null){if(r<35)add(1,"RSI quá bán "+f(r,0));else if(r>65)add(-1,"RSI quá mua "+f(r,0))}
+const k=g(I.st.k),dd=g(I.st.d);if(k!=null&&dd!=null){if(k<20&&k>dd)add(1,"Stoch quá bán, cắt lên");else if(k>80&&k<dd)add(-1,"Stoch quá mua, cắt xuống")}
+const sd=I.sup.dir[L];if(sd!=null)add(sd===1?1:-1,sd===1?"Supertrend tăng":"Supertrend giảm");
+const bu=g(I.bb.up),bl=g(I.bb.lo);if(bu!=null&&bu>bl){const pb=(px-bl)/(bu-bl);if(pb<.15)add(1,"Giá sát dải Bollinger dưới");else if(pb>.85)add(-1,"Giá sát dải Bollinger trên")}
+const ax=g(I.adx.adx),pd=g(I.adx.pdi),md=g(I.adx.mdi);if(ax!=null&&ax>=25&&pd!=null&&md!=null)add(pd>md?1:-1,pd>md?"ADX "+f(ax,0)+": xu hướng tăng":"ADX "+f(ax,0)+": xu hướng giảm");
+let pv=0,vv=0;for(let i=Math.max(0,off);i<=L;i++){pv+=(d[i].h+d[i].l+d[i].c)/3*(d[i].v||0);vv+=d[i].v||0}if(vv>0){const vw=pv/vv;add(px>vw?1:-1,px>vw?"Giá trên VWAP":"Giá dưới VWAP")}
+const NW=Math.max(12,Math.min(N||20,d.length)),wm=d.slice(-NW).reduce((a,x)=>a+x.c,0)/NW;add(px>wm?1:-1,px>wm?"Giá trên mức trung bình của khung":"Giá dưới mức trung bình của khung");
+const w=d.slice(-Math.max(12,Math.min(NW,120))),sl=Math.min(...w.map(x=>x.l)),sh=Math.max(...w.map(x=>x.h)),q1=sl+.25*(sh-sl),q3=sl+.75*(sh-sl),sup=[e20,e50,g(I.bb.mid),g(I.bb.lo),sl,q1,wm,sd===1?g(I.sup.line):null].filter(v=>v!=null&&v<px-.1*A),res=[e20,e50,g(I.bb.mid),g(I.bb.up),sh,q3,wm,sd===-1?g(I.sup.line):null].filter(v=>v!=null&&v>px+.1*A);
+const bh=Math.min(px-.2*A,sup.length?Math.max(...sup):px-.6*A),bz=[bh-.6*A,bh],sl2=Math.max(px+.2*A,res.length?Math.min(...res):px+.6*A),sz=[sl2,sl2+.6*A];
+return{sc,it,buy:bz,sell:sz,px,act:sc>=3?"NÊN MUA":sc<=-3?"NÊN BÁN":"CHỜ / TRUNG LẬP",col:sc>=3?"#16a34a":sc<=-3?"#dc2626":"#d99a00"}}
+function sigBar(Z){const el=$("sigbar");if(!el)return;if(!Z){el.innerHTML="";return}const lb={d1:"1 ngày (nến 5 phút)",d3:"3 ngày (nến 15 phút)",w1:"1 tuần",m1:"1 tháng",y1:"1 năm",all:"Tất cả"}[RNG]||"";
+el.innerHTML=`<span class="sgb" style="background:${Z.col}">${Z.sc>=3?"▲":Z.sc<=-3?"▼":"●"} ${Z.act}</span><span class="sgt">Khung <b>${lb}</b> · Điểm tín hiệu <b>${Z.sc>0?"+":""}${Z.sc}</b> (≥ +3 mua, ≤ −3 bán) · Vùng nên mua <b style="color:#16a34a">${f(Z.buy[0],2)}–${f(Z.buy[1],2)}</b> · Vùng nên bán <b style="color:#dc2626">${f(Z.sell[0],2)}–${f(Z.sell[1],2)}</b></span><span class="sgw">${Z.it.map(x=>`<i style="color:${x[0]>0?"#16a34a":"#dc2626"}">${x[0]>0?"+":"−"} ${hx(x[1])}</i>`).join("")}</span>`}
 function tsOfIdxD(d,i){if(d===C)return tsOfIdx(i);return d[i].t||0}
 function cvInfo(k){if(!CVL)return;const x=CVL.d[k];if(!x)return;const v=vnD(CVL.intra?x.t:tsOfIdxD(CVL.d,k));$("cvinfo").innerHTML=`<b style="color:var(--ink)">${v.dd}/${v.mm}${CVL.intra?" "+v.hh+":"+v.mi:"/"+v.yy}</b> · Mở ${nz(x.o)?f(x.o):"—"} · Cao ${f(x.h)} · Thấp ${f(x.l)} · Đóng <b style="color:var(--ink)">${f(x.c)}</b> · KL ${fv(x.v)}`}
 function cvMove(e){if(!CVL)return;const r=$("cv").getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/CVL.cw);if(i<0||i>=CVL.N)return;HOV=true;cvInfo(CVL.off+i)}
 $("cv").addEventListener("pointermove",cvMove);$("cv").addEventListener("pointerdown",cvMove);$("cv").addEventListener("pointerleave",()=>{HOV=false;if(CVL)cvInfo(CVL.d.length-1)});
 function setRng(r){RNG=r;try{localStorage.setItem("rng",r)}catch(e){}document.querySelectorAll("#rng button").forEach(b=>b.classList.toggle("on",b.dataset.r===r));HOV=false;loadBars(true);chart()}
 $("rng").onclick=e=>{if(e.target.dataset.r)setRng(e.target.dataset.r)};
-$("ovl").onclick=e=>{const k=e.target.dataset.o;if(!k)return;OVL[k]=OVL[k]?0:1;try{localStorage.setItem("ovl",JSON.stringify(OVL))}catch(x){}e.target.classList.toggle("on",!!OVL[k]);chart()};
+$("ovl").onclick=e=>{const k=e.target.dataset.o;if(!k)return;OVL[k]=OVL[k]?0:1;try{localStorage.setItem("ovl2",JSON.stringify(OVL))}catch(x){}e.target.classList.toggle("on",!!OVL[k]);chart()};
 document.querySelectorAll("#rng button").forEach(b=>b.classList.toggle("on",b.dataset.r===RNG));document.querySelectorAll("#ovl button").forEach(b=>b.classList.toggle("on",!!OVL[b.dataset.o]));
 setInterval(()=>loadBars(),5000);
 function lastTD(){let d=new Date(Date.now()+7*36e5);if(d.getUTCDay()>0&&d.getUTCDay()<6&&d.getUTCHours()*60+d.getUTCMinutes()<540)d=new Date(d-864e5);while(d.getUTCDay()===0||d.getUTCDay()===6)d=new Date(d-864e5);return d.getUTCDate().toString().padStart(2,"0")+"/"+(d.getUTCMonth()+1).toString().padStart(2,"0")+"/"+d.getUTCFullYear()}
@@ -1125,7 +1150,7 @@ Object.assign(SECT,{ANV:"Hàng tiêu dùng",SJG:"Xây dựng & ĐTC",HJS:"Điệ
 function secOf(s){return SECT[s]||SECX[s]||"Khác"}
 function divSyms(){return[...new Set((DIVR||[]).map(d=>d.s))].slice(0,60)}
 async function divSecLoad(){if(!SERVER||DIRECT||SECBUSY)return;const need=divSyms().filter(x=>!SECT[x]&&!(x in SECX));if(!need.length)return;SECBUSY=true;try{const j=await api("/api/sectors?symbols="+need.join(","));Object.entries(j.sectors||{}).forEach(([k,v])=>{SECX[k]=v||""});need.forEach(x=>{if(!(x in SECX))SECX[x]=""});try{liveTables()}catch(e){}}catch(e){}SECBUSY=false}
-async function divScan(){if(!SERVER||DIRECT)return;const need=divSyms().filter(x=>!RD[x]&&!DEXTRA[x]);if(!need.length||DXTRY>=8)return;DXTRY++;try{const j=await api("/api/scan?symbols="+need.join(","));let n=0;Object.entries(j.data||{}).forEach(([k,d])=>{if(d.c&&d.c.length>=60){DEXTRA[k]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r};n++}});if(n){DXM={};try{liveTables()}catch(e){}}if(divSyms().some(x=>!RD[x]&&!DEXTRA[x]))setTimeout(divScan,9000)}catch(e){setTimeout(divScan,15000)}}
+async function divScan(){if(!SERVER||DIRECT)return;const need=divSyms().filter(x=>!RD[x]&&!DEXTRA[x]);if(!need.length||DXTRY>=30)return;DXTRY++;try{const j=await api("/api/scan?symbols="+need.join(","));let n=0;Object.entries(j.data||{}).forEach(([k,d])=>{if(d.c&&d.c.length>=60){DEXTRA[k]={c:d.c.map((cc,i)=>({o:d.o[i],h:d.h[i],l:d.l[i],c:cc,v:d.v[i],t:d.t[i]})),r:d.r};n++}});if(n){DXM={};try{liveTables()}catch(e){}}if(divSyms().some(x=>!RD[x]&&!DEXTRA[x]))setTimeout(divScan,9000)}catch(e){setTimeout(divScan,15000)}}
 function divRaw(sym){const d=RD[sym]||DEXTRA[sym];return d?d.c:(GC[sym]||(GC[sym]=gen(sym).candles))}
 function divCalc(sym){const k=dkey()+"|"+sym+"|"+(RD[sym]?1:DEXTRA[sym]?2:0);if(DXM[k])return DXM[k];const raw=divRaw(sym),o={px:null,chg:null,w:[null,null,null,null]};if(raw&&raw.length){o.px=raw[raw.length-1].c;if(raw.length>1&&raw[raw.length-2].c)o.chg=(o.px/raw[raw.length-2].c-1)*100}
 if(!pickReady())return o;try{const d=RD[sym]||DEXTRA[sym],cc=closedC(d?d.c:raw),r=d?d.r:null,ix=Object.keys(RD).length&&RIDX?RIDX:(GIX||(GIX=simIdx())),e=evalStock(cc,ix,r);if(e){o.w[1]=e.s&&e.s.win;o.w[2]=e.m&&e.m.win;o.w[3]=e.l&&e.l.win}const sw=swingEval(sym,cc,ix);if(sw){let wn=sw.win,de=null;try{de=dayEval(sym,cc,ix)}catch(x){}if(de)wn=cl(Math.round(sw.win*.8+de.win*.2),40,82);o.w[0]=wn}}catch(e){}
@@ -1133,7 +1158,7 @@ DXM[k]=o;return o}
 function divX(sym,part){try{const o=divCalc(sym),sc=secOf(sym),pl=v=>v==null?'<td><small style="color:var(--mut)">—</small></td>':`<td><span class="pill" style="background:${wc(v)}">${v}%</span></td>`,col=o.chg==null?"var(--mut)":o.chg>0.005?"var(--up)":o.chg<-0.005?"var(--dn)":"#d99a00",pr=o.px==null?"<td>—</td>":`<td><b style="color:${col};font-size:15px">${f(o.px,2)}</b>${o.chg==null?"":`<small class="dchg" style="color:${col};font-weight:700">${o.chg>0.005?"▲ +":o.chg<-0.005?"▼ ":"− "}${f(o.chg,2)}%</small>`}</td>`;return part===0?`<td class="l"><span class="sec">${sc}</span></td>${pr}${pl(o.w[0])}`:pl(o.w[1])+pl(o.w[2])+pl(o.w[3])}catch(e){return part===0?"<td>—</td><td>—</td><td>—</td>":"<td>—</td><td>—</td><td>—</td>"}}
 function dividendRows(){const rows=(DIVR||[]).filter(d=>/^\d{4}-\d\d-\d\d$/.test(d.ex)),fd=x=>x.slice(8)+"/"+x.slice(5,7)+"/"+x.slice(0,4),prev=x=>{let t=new Date(x+"T00:00:00Z");do t=new Date(t-864e5);while(t.getUTCDay()===0||t.getUTCDay()===6);return t.toISOString().slice(0,10)},td=new Date(Date.now()+7*36e5).toISOString().slice(0,10);
 const pr=rows.filter(d=>!LIST||!Object.keys(LIST).length||LIST[d.s]).slice(0,40);
-return pr.filter(d=>prev(d.ex)>=td).map(d=>{const bd=prev(d.ex),n=Math.ceil((new Date(d.ex+"T00:00:00Z")-new Date(td+"T00:00:00Z"))/864e5);return `<tr data-s="${d.s}"><td class="l sym">${d.s}</td>${divX(d.s,0)}<td>${fd(bd)}<br><small style="color:var(--mut)">${n>1?"còn "+(n-1)+" ngày":n===1?"hôm nay":"đã qua"}</small></td><td>${fd(d.ex)}</td>${divX(d.s,1)}<td>${d.desc}: ${d.note||""}${d.pay?"<br><small style='color:var(--mut)'>thanh toán "+fd(d.pay)+"</small>":""}</td></tr>`}).join("")||`<tr><td class="l" colspan="10">Hiện không có mã nào còn kịp mua để hưởng cổ tức.</td></tr>`}
+const hh=new Date(Date.now()+7*36e5).getUTCHours();return pr.filter(d=>{const bd=prev(d.ex);return bd>td||(bd===td&&hh<15)}).map(d=>{const bd=prev(d.ex),n=Math.ceil((new Date(d.ex+"T00:00:00Z")-new Date(td+"T00:00:00Z"))/864e5);return `<tr data-s="${d.s}"><td class="l sym">${d.s}</td>${divX(d.s,0)}<td>${fd(bd)}<br><small style="color:var(--mut)">${n>1?"còn "+(n-1)+" ngày":n===1?"hôm nay":"đã qua"}</small></td><td>${fd(d.ex)}</td>${divX(d.s,1)}<td>${d.desc}: ${d.note||""}${d.pay?"<br><small style='color:var(--mut)'>thanh toán "+fd(d.pay)+"</small>":""}</td></tr>`}).join("")||`<tr><td class="l" colspan="10">Hiện không có mã nào còn kịp mua để hưởng cổ tức.</td></tr>`}
 async function dividendLoad(){try{if(SERVER&&!DIRECT){const j=await api("/api/dividends");DIVR=j.rows}else{const d=new Date(Date.now()+7*36e5-864e5).toISOString().slice(0,10);let all=[];for(const t of["DIVIDEND","STOCKDIV","KINDDIV"]){const r=await fetch("https://api-finfo.vndirect.com.vn/v4/events?q="+encodeURIComponent("type:"+t+"~locale:VN~effectiveDate:gte:"+d)+"&size=80&sort=effectiveDate:asc");const j=await r.json();all=all.concat((j.data||[]).map(e=>({s:e.code,t,desc:e.typeDesc,note:e.note,ex:e.effectiveDate,pay:e.expiredDate||e.actualDate||""})))}if(!all.length)throw 0;all.sort((a,b)=>a.ex<b.ex?-1:1);DIVR=all}DIVERR=""}catch(e){if(!DIVR)DIVERR="Chưa kết nối được lịch cổ tức thật (cần chạy qua máy chủ Render/gói Full). Không hiển thị số mẫu."}try{liveTables()}catch(e){}try{divSecLoad();divScan()}catch(e){}}
 setTimeout(dividendLoad,2000);setInterval(dividendLoad,3*3600*1000);
 
@@ -1144,6 +1169,16 @@ function redraw(){setTimeout(()=>{try{if(typeof C!=="undefined"&&C.length)chart(
 if(sv==="light"||sv==="dark")R.setAttribute("data-theme",sv);mark();
 document.addEventListener("click",e=>{const b=e.target.closest("#thm button");if(!b)return;R.setAttribute("data-theme",b.dataset.th);try{localStorage.setItem("theme1",b.dataset.th)}catch(x){}mark();redraw()});
 mq.addEventListener&&mq.addEventListener("change",()=>{mark();redraw()})})();
+
+(function(){let busy=false;const btn=$("rfb");if(!btn)return;const tx=btn.querySelector(".rft"),bar=btn.querySelector(".rfp");
+const tm=(p,ms)=>Promise.race([Promise.resolve().then(p),new Promise(r=>setTimeout(r,ms))]);
+btn.addEventListener("click",async()=>{if(busy)return;busy=true;btn.classList.add("busy");
+const T=[];if(SERVER&&!DIRECT){T.push(["giá cổ phiếu",()=>realLoad(S)],["báo giá thị trường",()=>realQuotes()],["dữ liệu trong phiên",()=>pollReal(true)],["quét danh sách mã",()=>pullScan()],["tin tức & sự kiện",()=>stnLoad(true)],["cổ tức",()=>{DXM={};DXTRY=0;return dividendLoad()}],["khung nến",()=>loadBars(true)])}
+else{T.push(["dữ liệu",()=>{try{liveTables()}catch(e){}}])}
+T.push(["bảng xếp hạng",()=>{try{pickRender()}catch(e){}try{dayRender()}catch(e){}}],["danh mục",()=>{try{pfRender()}catch(e){}try{pfXRender(true)}catch(e){}}],["biểu đồ",()=>{try{render()}catch(e){}try{chart()}catch(e){}}]);
+const n=T.length;let done=0;const set=(p,t)=>{bar.style.width=p+"%";tx.textContent=t};set(0,"Đang tải 0%");
+for(const [nm,fn] of T){set(Math.round(done/n*100),"Đang tải "+Math.round(done/n*100)+"%");btn.title="Đang cập nhật: "+nm;try{await tm(fn,20000)}catch(e){}done++;await new Promise(r=>setTimeout(r,120))}
+set(100,"✔ Xong 100%");setTimeout(()=>{bar.style.width="0";tx.textContent="🔄 Làm mới";btn.classList.remove("busy");busy=false},1600)})})();
 </script>
 </body>
 </html>

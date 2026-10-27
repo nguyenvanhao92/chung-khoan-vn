@@ -53,10 +53,25 @@ def parse_fireant(rows):
     return out
 
 
-def fetch_json(url, timeout=10):
+_UP = threading.BoundedSemaphore(int(os.environ.get("UP_CONC", "8")))   # gioi han so ket noi toi nguon du lieu cung luc (tranh bi nguon chan/loi 500)
+
+
+def fetch_json(url, timeout=10, tries=2):
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+    last = None
+    for k in range(tries):
+        try:
+            with _UP:
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code < 500 and e.code != 429:
+                raise
+        except Exception as e:
+            last = e
+        time.sleep(0.8 * (k + 1))
+    raise last
 
 
 def cached(key, ttl, fn):
@@ -183,6 +198,9 @@ def parse_vndirect(j):
     return out
 
 
+_LASTGOOD = {}
+
+
 def history(sym, days=420):
     if fireant_token():
         try:
@@ -196,13 +214,21 @@ def history(sym, days=420):
     try:
         c = parse_entrade(fetch_json(ENTRADE + "?" + q))
         if len(c) >= 30:
+            _LASTGOOD[sym] = (c, "DNSE/Entrade")
             return c, "DNSE/Entrade"
     except Exception as e:
         print("entrade history loi:", e, file=sys.stderr)
-    q = urllib.parse.urlencode({"sort": "date", "size": min(1000, int(days * 0.75) + 10), "q": "code:" + sym})
-    c = parse_vndirect(fetch_json(VNDIRECT + "?" + q))
-    if len(c) >= 30:
-        return c, "VNDIRECT"
+    try:
+        q = urllib.parse.urlencode({"sort": "date", "size": min(1000, int(days * 0.75) + 10), "q": "code:" + sym})
+        c = parse_vndirect(fetch_json(VNDIRECT + "?" + q))
+        if len(c) >= 30:
+            _LASTGOOD[sym] = (c, "VNDIRECT")
+            return c, "VNDIRECT"
+    except Exception as e:
+        print("vndirect history loi:", e, file=sys.stderr)
+    if sym in _LASTGOOD:                      # nguon loi tam thoi: dung lai du lieu gan nhat da lay duoc
+        c, src = _LASTGOOD[sym]
+        return c, src + " (dữ liệu lưu gần nhất)"
     raise RuntimeError("khong lay duoc lich su gia")
 
 
@@ -273,14 +299,28 @@ def ratios(sym):
 _scan = {"data": {}, "busy": False, "index": None, "fail": {}}
 
 
+_scan_q = set()
+
+
 def scan_start(syms):
     """Nap nen lich su gia + chi so tai chinh cho ca danh sach ma (de xep hang ngan/trung/dai han)."""
     if _scan["busy"]:
+        _scan_q.update(x for x in syms if x not in _scan["data"])   # dang quet: xep hang cac ma moi de quet tiep sau
         return
     def run():
         _scan["busy"] = True
         try:
-            for s in syms:
+            work(syms)
+            while _scan_q:
+                more = list(_scan_q)
+                _scan_q.clear()
+                work(more)
+            tail()
+        finally:
+            _scan["busy"] = False
+    def work(lst):
+        if True:
+            for s in lst:
                 hit = _scan["data"].get(s)
                 if hit and time.time() - hit["ts"] < 900:
                     continue
@@ -302,6 +342,8 @@ def scan_start(syms):
                     _scan["fail"][s] = time.time()
                     print("scan loi", s, e, file=sys.stderr)
                 time.sleep(0.25)
+    def tail():
+        if True:
             idx = _scan["index"]
             if not idx or time.time() - idx[0] > 600:
                 try:
@@ -310,8 +352,6 @@ def scan_start(syms):
                     _scan["index"] = (time.time(), parse_entrade(fetch_json(ENTRADE_INDEX + "?" + q)))
                 except Exception as e:
                     print("scan chi so VNINDEX loi", e, file=sys.stderr)
-        finally:
-            _scan["busy"] = False
     threading.Thread(target=run, daemon=True).start()
 
 
@@ -535,8 +575,9 @@ def news_sentiment(text):
 
 def fetch_text(url, timeout=10):
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8", "replace")
+    with _UP:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read().decode("utf-8", "replace")
 
 
 def load_news():
