@@ -311,7 +311,7 @@ function session(){const d=new Date(Date.now()+7*36e5),w=d.getUTCDay(),m=d.getUT
 if(w===0||w===6)return{open:false,t:"Đóng cửa (cuối tuần)"};
 if(m<540)return{open:false,t:"Chưa mở cửa"};if(m<555)return{open:true,t:"Phiên ATO"};if(m<690)return{open:true,t:"Khớp lệnh liên tục"};
 if(m<780)return{open:false,t:"Nghỉ trưa"};if(m<870)return{open:true,t:"Khớp lệnh liên tục"};if(m<885)return{open:true,t:"Phiên ATC"};return{open:false,t:"Đã đóng cửa"}}
-let INSRC="",QSRC="",DAYB=0,DAYV=0,SERVER=false,REAL=false,API="",lastPoll=0,lastBar=0,SRC="",lastOk=0;
+var PINGN=0,PINGBUSY=false;let INSRC="",QSRC="",DAYB=0,DAYV=0,SERVER=false,REAL=false,API="",lastPoll=0,lastBar=0,SRC="",lastOk=0;
 let NOOPEN=false,DIRECT=false,BC={t:0,d:null};
 async function cafefBoard(){if(BC.d&&Date.now()-BC.t<3000)return BC.d;const out={};
 for(const c of [1,2,9]){try{const r=await fetch("https://banggia.cafef.vn/stockhandler.ashx?center="+c,{cache:"no-store"});const a=await r.json();
@@ -325,7 +325,7 @@ throw new Error("không có lịch sử giá")}
 async function api(path){if(DIRECT)return directApi(path);const r=await fetch(API+path,{cache:"no-store"});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||"loi");return j}
 function showMode(){const ss=session();$("mkt").textContent="HOSE/HNX: "+ss.t;
 const q=MK[S]||{},st=REAL&&q.time?staleInfo(q.time,ss):null;
-$("mode").textContent=REAL?"dữ liệu thật · "+SRC+(q.time?" · dữ liệu lúc "+q.time:(lastOk?" · "+new Date(lastOk).toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"}):""))+(st?" ⚠ "+st:""):(SERVER?"đang kết nối…":"bản web · dữ liệu phiên 20/10/2026, không tự cập nhật");
+$("mode").textContent=REAL?"dữ liệu thật · "+SRC+(q.time?" · dữ liệu lúc "+q.time:(lastOk?" · "+new Date(lastOk).toLocaleTimeString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"}):""))+(st?" ⚠ "+st:""):((SERVER||(PINGN>0&&API===""))?"đang kết nối…":"bản web · dữ liệu phiên 20/10/2026, không tự cập nhật");
 $("mode").style.color=REAL&&!st?"#4ade80":"#fde68a";
 if(S&&DB){const g=DB[S]||["Cổ phiếu "+S];$("nm").textContent=g[0]+" · "+(REAL?"giá thật · "+(INSRC||q.src||SRC.split(" ")[0]):VERIFIED.has(S)?"dữ liệu đóng cửa 20/10/2026 (CafeF)":"⚠ giá ước tính, chưa đối chiếu")}}
 function staleInfo(t,ss){const m=/(\d+):(\d+) (\d+)\/(\d+)\/(\d+)/.exec(t);if(!m)return null;
@@ -930,7 +930,12 @@ pfInit();topRender();newsLoad();setInterval(newsLoad,300000);pickRender();setInt
 API=location.protocol.startsWith("http")?"":"http://localhost:8000";
 let lastQ=0;setInterval(()=>{if(SERVER&&(session().open||Date.now()-lastQ>60000)){lastQ=Date.now();realQuotes()}},4000);
 function tryDirect(){cafefBoard().then(()=>{DIRECT=true;SERVER=true;listLoad();realQuotes().then(()=>load(S||"FPT"))}).catch(()=>{})}
-fetch(API+"/api/ping",{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.ok){SERVER=true;listLoad();pullScan();realQuotes().then(()=>load(S||"FPT"))}else tryDirect()}).catch(tryDirect);
+function pingTry(){if(SERVER||PINGBUSY)return Promise.resolve(SERVER);PINGBUSY=true;PINGN++;
+const ac=typeof AbortController!=="undefined"?new AbortController():null,tt=setTimeout(()=>{try{ac&&ac.abort()}catch(e){}},12000);
+return fetch(API+"/api/ping",{cache:"no-store",signal:ac?ac.signal:undefined}).then(r=>r.text()).then(t=>{let j=null;try{j=JSON.parse(t)}catch(e){}
+if(j&&j.ok){SERVER=true;PINGN=0;listLoad();pullScan();return realQuotes().then(()=>load(S||"FPT"))}
+if(PINGN===1&&API==="")tryDirect();throw 0}).catch(()=>{if(!SERVER&&API===""){const m=$("mode");if(m&&!REAL)m.textContent="đang kết nối máy chủ… (lần "+PINGN+")";setTimeout(pingTry,Math.min(15000,3000+PINGN*2000))}}).finally(()=>{clearTimeout(tt);PINGBUSY=false}).then(()=>SERVER)}
+pingTry();
 load("FPT");
 
 /* ===== Toàn thị trường (tất cả mã niêm yết) ===== */
@@ -1173,7 +1178,8 @@ mq.addEventListener&&mq.addEventListener("change",()=>{mark();redraw()})})();
 (function(){let busy=false;const btn=$("rfb");if(!btn)return;const tx=btn.querySelector(".rft"),bar=btn.querySelector(".rfp");
 const tm=(p,ms)=>Promise.race([Promise.resolve().then(p),new Promise(r=>setTimeout(r,ms))]);
 btn.addEventListener("click",async()=>{if(busy)return;busy=true;btn.classList.add("busy");
-const T=[];if(SERVER&&!DIRECT){T.push(["giá cổ phiếu",()=>realLoad(S)],["báo giá thị trường",()=>realQuotes()],["dữ liệu trong phiên",()=>pollReal(true)],["quét danh sách mã",()=>pullScan()],["tin tức & sự kiện",()=>stnLoad(true)],["cổ tức",()=>{DXM={};DXTRY=0;return dividendLoad()}],["khung nến",()=>loadBars(true)])}
+const T=[];if(!SERVER&&API===""){T.push(["kết nối máy chủ",()=>{PINGN=0;return pingTry()}])}
+if(SERVER&&!DIRECT){T.push(["giá cổ phiếu",()=>realLoad(S)],["báo giá thị trường",()=>realQuotes()],["dữ liệu trong phiên",()=>pollReal(true)],["quét danh sách mã",()=>pullScan()],["tin tức & sự kiện",()=>stnLoad(true)],["cổ tức",()=>{DXM={};DXTRY=0;return dividendLoad()}],["khung nến",()=>loadBars(true)])}
 else{T.push(["dữ liệu",()=>{try{liveTables()}catch(e){}}])}
 T.push(["bảng xếp hạng",()=>{try{pickRender()}catch(e){}try{dayRender()}catch(e){}}],["danh mục",()=>{try{pfRender()}catch(e){}try{pfXRender(true)}catch(e){}}],["biểu đồ",()=>{try{render()}catch(e){}try{chart()}catch(e){}}]);
 const n=T.length;let done=0;const set=(p,t)=>{bar.style.width=p+"%";tx.textContent=t};set(0,"Đang tải 0%");
