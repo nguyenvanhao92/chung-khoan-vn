@@ -201,7 +201,7 @@ def parse_vndirect(j):
 _LASTGOOD = {}
 
 
-def history(sym, days=420):
+def history(sym, days=420, slow_fallback=True):
     if fireant_token():
         try:
             c = parse_fireant(fireant_rows(sym, days))
@@ -216,11 +216,14 @@ def history(sym, days=420):
         if len(c) >= 30:
             _LASTGOOD[sym] = (c, "DNSE/Entrade")
             return c, "DNSE/Entrade"
+        print("entrade history ngan:", sym, days, "ngay ->", len(c), "nen", file=sys.stderr)
     except Exception as e:
         print("entrade history loi:", e, file=sys.stderr)
+    if not slow_fallback:
+        raise RuntimeError("entrade khong tra du nen")
     try:
         q = urllib.parse.urlencode({"sort": "date", "size": min(1000, int(days * 0.75) + 10), "q": "code:" + sym})
-        c = parse_vndirect(fetch_json(VNDIRECT + "?" + q))
+        c = parse_vndirect(fetch_json(VNDIRECT + "?" + q, timeout=6, tries=1))
         if len(c) >= 30:
             _LASTGOOD[sym] = (c, "VNDIRECT")
             return c, "VNDIRECT"
@@ -328,7 +331,7 @@ def scan_start(syms):
                     continue
                 try:
                     try:
-                        c, src = history(s, 3650)
+                        c, src = history(s, 3650, slow_fallback=False)
                     except Exception:
                         c, src = history(s, 420)
                     try:
